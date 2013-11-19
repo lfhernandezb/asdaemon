@@ -457,17 +457,23 @@ public class AttendantThread extends Thread {
 	protected void ProcessRequest() throws Exception {
 		JSONObject data;
 		String tipo, pais, region, ciudad, comuna, str_output;
+		long token;
 		ArrayList<Comuna> listaComuna;
 		ArrayList<AbstractMap.SimpleEntry<String, String>> listParameters;
 		
 		tipo = "";
 		str_output = "";
+		token = 0;
 		
         try {
         	listParameters = new ArrayList<AbstractMap.SimpleEntry<String, String>>();
         	
         	tipo = m_jo.get("tipo").toString();
         	data = m_jo.getJSONObject("data");
+        	
+        	// todos los requests traen token
+        	
+        	token = data.getLong("token");
         	
         	logger.debug("Tipo Req: " + tipo);
         	
@@ -688,6 +694,7 @@ public class AttendantThread extends Thread {
 				str_output =
         				"{" +
         				"\"tipo\": \"MSG_REGISTRO\"," +
+        				"\"token\":\"" + String.valueOf(token) + "\"," + 
         				"\"resultado\":\"0\"," +
         				"\"descripcion\":\"Exito\"," + 
         				"\"data\":{" +
@@ -761,6 +768,7 @@ public class AttendantThread extends Thread {
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_ACTUALIZA_CONTACTOS\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
     				"\"resultado\":\"0\"," +
     				"\"descripcion\":\"Exito\"," + 
     				"}";
@@ -839,6 +847,7 @@ public class AttendantThread extends Thread {
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_POSICION\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
     				"\"resultado\":\"0\"," +
     				"\"descripcion\":\"Exito\"," +
     				"\"frecuencia\":\"" + m_ini.get("General", "position_frequency") + "\"" +
@@ -995,6 +1004,7 @@ public class AttendantThread extends Thread {
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_PANICO_ALARMA\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
     				"\"resultado\":\"0\"," +
     				"\"descripcion\":\"Exito\"," + 
     				"\"data\":{" +
@@ -1214,6 +1224,7 @@ public class AttendantThread extends Thread {
 				str_output =
         				"{" +
         				"\"tipo\": \"MSG_CREA_COMUNIDAD\"," +
+        				"\"token\":\"" + String.valueOf(token) + "\"," + 
         				"\"resultado\":\"0\"," +
         				"\"descripcion\":\"Exito\"," + 
         				"\"data\":{" +
@@ -1329,6 +1340,7 @@ public class AttendantThread extends Thread {
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_AGREGA_A_COMUNIDAD\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
     				"\"resultado\":\"0\"," +
     				"\"descripcion\":\"Exito\"," + 
     				"}";        		
@@ -1356,6 +1368,7 @@ public class AttendantThread extends Thread {
 			str_output =
 				"{" +
 				"\"tipo\": \"" + tipo + "\"," +
+				"\"token\":\"" + String.valueOf(token) + "\"," + 
 				"\"resultado\":\"1\"," +
 				"\"descripcion\":\"Fallo tipo JSONException, " + ex.getMessage() + "\"," + 
 				"}";        		
@@ -1369,6 +1382,7 @@ public class AttendantThread extends Thread {
 			str_output =
 				"{" +
 				"\"tipo\": \"" + tipo + "\"," +
+				"\"token\":\"" + String.valueOf(token) + "\"," + 
 				"\"resultado\":\"1\"," +
 				"\"descripcion\":\"Fallo tipo SQLException, " + ex.getMessage() + "\"," + 
 				"}";        		
@@ -1379,6 +1393,7 @@ public class AttendantThread extends Thread {
 			str_output =
 				"{" +
 				"\"tipo\": \"" + tipo + "\"," +
+				"\"token\":\"" + String.valueOf(token) + "\"," + 
 				"\"resultado\":\"1\"," +
 				"\"descripcion\":\"Fallo tipo Exception, " + ex.getMessage() + "\"," + 
 				"}";        		
