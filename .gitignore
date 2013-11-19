@@ -1,0 +1,7 @@
+.classpath
+.project
+bd/respaldos/*
+bin/*.class
+bin/*.jar
+etc/*
+scripts/*

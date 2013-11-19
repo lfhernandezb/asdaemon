@@ -1,0 +1,46 @@
+   43  scp root@www.dsoft.cl:jdk-6u38-linux-x64.bin .
+   44  sh jdk-6u38-linux-x64.bin 
+   45  ls
+   46  mv jdk1.6.0_38 /opt/
+   47  scp root@www.dsoft.cl:jdk-6u38-linux-x64.bin .
+   48  scp root@www.dsoft.cl:commons* .
+   49  cd /opt/
+   50  tar xvxf /root/commons-daemon-1.0.12-bin.tar.gz 
+   51  ls
+   52  ls commons-daemon-1.0.12/
+   53  ls commons-daemon-1.0.12/apidocs/
+   54  ls commons-daemon-1.0.12/
+   55  cd 
+   56  ls
+   57  scp root@www.dsoft.cl:apache-* .
+   58  scp root@www.dsoft.cl:mysql-c* .
+   59  scp root@www.dsoft.cl:openmap* .
+   60  scp root@www.dsoft.cl:ini4j* .
+   61  cd /opt
+   62  ls
+   63  ls /root
+   64  tar xvxf /root/apache-log4j-2.0-beta3-bin.tar.gz 
+   65  tar xvxf /root/mysql-connector-java-5.1.22.tar.gz 
+   66  tar xvxf /root/commons-lang3-3.1-bin.tar.gz 
+   67  unzip /root/openmap-5.0.zip 
+   68  unzip /root/ini4j-0.5.2-SNAPSHOT-all.zip 
+   69  ls
+   70  tar xvxf /root/commons-daemon-1.0.12-src.tar.gz 
+   71  cd commons-daemon-1.0.12-src/
+   72  ls
+   73  ls
+   74  cd src
+   75  ls
+   76  cd native/unix/
+   77  ls
+   78  ./configure --with-java=/opt/jdk1.6.0_38
+   79  history 
+   80   yum groupinstall 'Development Tools'
+   81  ./configure --with-java=/opt/jdk1.6.0_38
+   82  make
+   83  ls
+   84  adduser --help
+   85  adduser -c "Usuario para demonio amigo seguro" -d /home/manada -m -s /bin/bash manada
+   86  history
+[root@servidor1 unix]# 
+

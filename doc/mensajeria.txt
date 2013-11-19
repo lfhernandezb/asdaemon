@@ -1,0 +1,408 @@
+Smartphone a Servidor
+
+Registro
+
+var request= {
+"tipo": "MSG_REGISTRO",
+"data":{
+	"alias":"jperez",
+	"contrasena":"cualquiercosa", 
+	"nombre":"Juan",
+	"apellido_paterno":"Pérez",
+	"apellido_materno":"Machuca",
+	"movil":"98765432",
+	"rut":"1-9",
+	"email":"jperez@example.com",
+	"fecha_nacimiento":"12-03-1980",
+	"direccion":"Gran Avenida 7654 La Cisterna Santiago",
+	"foto":"",
+	"antecedentes_emergencia":"",
+	"pais":"Chile",
+	"region":"RM",
+	"ciudad":"Santiago",
+	"comuna":"La Cisterna"
+	}
+};
+
+var response= {
+"tipo": "MSG_REGISTRO",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_usuario":"1"
+	}
+};
+
+var request= {
+"tipo": "MSG_REGISTRO",
+"data":{
+	"alias":"mzumaeta",
+	"contrasena":"cualquiercosa", 
+	"nombre":"Maria",
+	"apellido_paterno":"Zumaeta",
+	"apellido_materno":"Rodríguez",
+	"movil":"87654321",
+	"rut":"1-9",
+	"email":"mzumaeta@dominio1.com",
+	"fecha_nacimiento":"09-07-1955",
+	"direccion":"Irarrázaval 2012, Santiago, Ñuñoa, Chile",
+	"foto":"",
+	"antecedentes_emergencia":"",
+	"pais":"Chile",
+	"region":"RM",
+	"ciudad":"Santiago",
+	"comuna":"Ñuñoa"
+	}
+};
+
+var response= {
+"tipo": "MSG_REGISTRO",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_usuario":"2"
+	}
+};
+
+var request= {
+"tipo": "MSG_REGISTRO",
+"data":{
+	"alias":"jtapia",
+	"contrasena":"cualquiercosa", 
+	"nombre":"José",
+	"apellido_paterno":"Tapia",
+	"apellido_materno":"Baeza",
+	"movil":"76543210",
+	"rut":"1-9",
+	"email":"jtapia@dominio2.com",
+	"fecha_nacimiento":"22-07-1962",
+	"direccion":"Lo Martinez 234, La Pintana, Santiago, Chile",
+	"foto":"",
+	"antecedentes_emergencia":"",
+	"pais":"Chile",
+	"region":"RM",
+	"ciudad":"Santiago",
+	"comuna":"La Pintana"
+	}
+};
+
+var response= {
+"tipo": "MSG_REGISTRO",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_usuario":"3"
+	}
+};
+
+var request= {
+"tipo": "MSG_REGISTRO",
+"data":{
+	"alias":"elarrain",
+	"contrasena":"cualquiercosa", 
+	"nombre":"Enrique",
+	"apellido_paterno":"Larraín",
+	"apellido_materno":"Fonseca",
+	"movil":"65432109",
+	"rut":"1-9",
+	"email":"elarrain@dominio3.com",
+	"fecha_nacimiento":"17-10-1977",
+	"direccion":"Calle lo Beltran 8751, Vitacura, Santiago, Chile",
+	"foto":"",
+	"antecedentes_emergencia":"",
+	"pais":"Chile",
+	"region":"RM",
+	"ciudad":"Santiago",
+	"comuna":"Vitacura"
+	}
+};
+
+var response= {
+"tipo": "MSG_REGISTRO",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_usuario":"4"
+	}
+};
+
+var request= {
+"tipo": "MSG_REGISTRO",
+"data":{
+	"alias":"dcespedes",
+	"contrasena":"cualquiercosa", 
+	"nombre":"Dolores",
+	"apellido_paterno":"Céspedes",
+	"apellido_materno":"Munizaga",
+	"movil":"43210987",
+	"rut":"1-9",
+	"email":"dcespedes@dominio4.com",
+	"fecha_nacimiento":"29-01-1955",
+	"direccion":"Exposicion 234, Estacion Central, Santiago, Chile",
+	"foto":"",
+	"antecedentes_emergencia":"",
+	"pais":"Chile",
+	"region":"RM",
+	"ciudad":"Santiago",
+	"comuna":"Estación Central"
+	}
+};
+
+var response= {
+"tipo": "MSG_REGISTRO",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_usuario":"5"
+	}
+};
+
+var request= {
+"tipo": "MSG_REGISTRO",
+"data":{
+	"alias":"dunamuno",
+	"contrasena":"cualquiercosa", 
+	"nombre":"Dionisio",
+	"apellido_paterno":"Unamuno",
+	"apellido_materno":"Tello",
+	"movil":"321009876",
+	"rut":"1-9",
+	"email":"dunamuno@dominio5.com",
+	"fecha_nacimiento":"23-09-1962",
+	"direccion":"Gran Avenida 7654 La Cisterna Santiago",
+	"foto":"",
+	"antecedentes_emergencia":"",
+	"pais":"Chile",
+	"region":"RM",
+	"ciudad":"Santiago",
+	"comuna":"La Cisterna"
+	}
+};
+
+var response= {
+"tipo": "MSG_REGISTRO",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_usuario":"6"
+	}
+};
+
+Posicion
+
+var request= {
+"tipo": "MSG_POSICION",
+"data":{
+	"id_usuario":"1",
+	"latitud":"-33.52277", 
+	"longitud":"-70.66039",
+	"fecha":"10-02-2013 12:00:00"
+	}
+};
+
+var response= {
+"tipo": "MSG_POSICION",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+var request= {
+"tipo": "MSG_POSICION",
+"data":{
+	"id_usuario":"2",
+	"latitud":"-33.453518", 
+	"longitud":"-70.609959",
+	"fecha":"10-02-2013 12:00:00"
+	}
+};
+
+var response= {
+"tipo": "MSG_POSICION",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+var request= {
+"tipo": "MSG_POSICION",
+"data":{
+	"id_usuario":"3",
+	"latitud":"-33.575702", 
+	"longitud":"-70.645316",
+	"fecha":"10-02-2013 12:00:00"
+	}
+};
+
+var response= {
+"tipo": "MSG_POSICION",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+var request= {
+"tipo": "MSG_POSICION",
+"data":{
+	"id_usuario":"4",
+	"latitud":"-33.382148", 
+	"longitud":"-70.553732",
+	"fecha":"10-02-2013 12:00:00"
+	}
+};
+
+var response= {
+"tipo": "MSG_POSICION",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+var request= {
+"tipo": "MSG_POSICION",
+"data":{
+	"id_usuario":"5",
+	"latitud":"-33.453872", 
+	"longitud":"-70.678011",
+	"fecha":"10-02-2013 12:00:00"
+	}
+};
+
+var response= {
+"tipo": "MSG_POSICION",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+var request= {
+"tipo": "MSG_POSICION",
+"data":{
+	"id_usuario":"6",
+	"latitud":"-33.521254", 
+	"longitud":"-70.671422",
+	"fecha":"10-02-2013 12:00:00"
+	}
+};
+
+var response= {
+"tipo": "MSG_POSICION",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+Actualiza Contactos
+
+var request= {
+"tipo": "MSG_ACTUALIZA_CONTACTOS",
+"data":{
+	"id_usuario":"1",
+	"contactos": [
+		{ "descripcion":"Tía María", "movil":"87654321" }, 
+		{ "descripcion":"Compadre Pepe", "movil":"76543210" }, 
+		{ "descripcion":"Hermano", "movil":"65432109" },
+		{ "descripcion":"Primo", "movil":"54321098" },
+	]
+	}
+};
+
+var response= {
+"tipo": "MSG_ACTUALIZA_CONTACTOS",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+Crea comunidad
+
+var request= {
+"tipo": "MSG_CREA_COMUNIDAD",
+"data":{
+	"id_usuario":"1",
+	"nombre":"Mirador Azul",
+	"descripcion":"Comunidad del edificio en Gran Avenida 7654 La Cisterna",
+	"latitud":"-33.522772", 
+	"longitud":"-70.660395",
+	"cobertura":"100"
+	}
+};
+
+var response= {
+"tipo": "MSG_CREA_COMUNIDAD",
+"resultado":"0",
+"descripcion":"Exito", 
+"data":{
+	"id_comunidad":"1"
+	}
+};
+
+Agrega a comunidad
+
+var request= {
+"tipo": "MSG_AGREGA_A_COMUNIDAD",
+"data":{
+	"id_usuario":"1",
+	"id_usuario_a_agregar":"6",
+	"id_comunidad":"1",
+	}
+};
+
+var response= {
+"tipo": "MSG_AGREGA_A_COMUNIDAD",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
+Botón de Pánico
+
+var request= {
+"tipo": "MSG_PANICO_ALARMA",
+"data":{
+	"id_usuario":"1",
+	"latitud":"-33.513758", 
+	"longitud":"-70.608895",
+	"tipo_incidente":"0",
+	"tipo_alarma":"1"
+	}
+};
+
+var response= {
+"tipo": "MSG_PANICO_ALARMA",
+"resultado":"0",
+"descripcion":"Exito",
+"data":{
+    "id_incidente":"1"
+    "listado_guardianes":
+	[
+	{"id_usuario":"5" , "alias":"dcespedes", "latitud":"-33.453872", "longitud":"-70.678011", "tipo_amigo":"CONTACTO_TEMPORAL" },
+	{ "id_usuario":"6" , "alias":"dunamuno", "latitud":"-33.521254", "longitud":"-70.671422", "tipo_amigo":"CONTACTO_COMUNIDAD" },
+	{ "id_usuario":"3" , "alias":"jtapia", "latitud":"-33.575702", "longitud":"-70.645316", "tipo_amigo":"CONTACTO_DIRECTO" },
+	{ "id_usuario":"2" , "alias":"mzumaeta", "latitud":"-33.453518", "longitud":"-70.609959", "tipo_amigo":"CONTACTO_DIRECTO" },
+	{ "id_usuario":"4" , "alias":"elarrain", "latitud":"-33.382148", "longitud":"-70.553732", "tipo_amigo":"CONTACTO_DIRECTO" },
+    ]
+    }
+};
+
+Servidor a Smartphone
+
+var request= {
+"tipo": "NOT_ALARMA_GUARDIAN",
+"data":{
+    "id_incidente":"7"
+    "tipo_incidente":"1"
+    "id_usuario_incidente":"1"
+    "fecha_incidente":"12-03-2013 15:34:22"
+    "latitud_incidente":"-33.453872"
+    "longitud_incidente":"-70.678011"
+    "alias":"troman"
+    "listado_guardianes":
+	[
+	{"id_usuario":"5" , "alias":"dcespedes", "latitud":"-33.453872", "longitud":"-70.678011", "tipo_amigo":"CONTACTO_TEMPORAL" },
+	{ "id_usuario":"6" , "alias":"dunamuno", "latitud":"-33.521254", "longitud":"-70.671422", "tipo_amigo":"CONTACTO_COMUNIDAD" },
+	{ "id_usuario":"3" , "alias":"jtapia", "latitud":"-33.575702", "longitud":"-70.645316", "tipo_amigo":"CONTACTO_DIRECTO" },
+	{ "id_usuario":"2" , "alias":"mzumaeta", "latitud":"-33.453518", "longitud":"-70.609959", "tipo_amigo":"CONTACTO_DIRECTO" },
+	{ "id_usuario":"4" , "alias":"elarrain", "latitud":"-33.382148", "longitud":"-70.553732", "tipo_amigo":"CONTACTO_DIRECTO" },
+    ]
+    }
+};
+
+var response= {
+"tipo": "NOT_ALARMA_GUARDIAN",
+"resultado":"0",
+"descripcion":"Exito", 
+};
+
