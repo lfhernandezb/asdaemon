@@ -97,7 +97,7 @@ public class Server {
         	serverSocketChannel.configureBlocking(false);
         	
         	// Bind the server socket to the specified address and port
-        	serverSocketChannel.socket().bind(new InetSocketAddress(m_ini.get("ServerListen", "host"), m_ini.get("ServerListen", "port", int.class)));
+        	serverSocketChannel.socket().bind(new InetSocketAddress(m_ini.get("ServerListen", "host"), m_ini.get("ServerListen", "port", int.class)), m_ini.get("General", "max_clients", int.class));
             
             // Register the server socket channel, indicating an interest in 
             // accepting new connections
