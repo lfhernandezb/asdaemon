@@ -344,6 +344,8 @@ public class AttendantThread extends Thread {
 
                     }
     		        
+    		        /*
+    		        2013/nov/22 Los mensajes asincronos seran enviados con un request 
     		        
                 	if (m_usuario != null) {
                 		
@@ -360,8 +362,8 @@ public class AttendantThread extends Thread {
         				
         				Iterator<MensajeUsuario> iterator = lmu.iterator();
         				
-        				outerloop:
-        				while (iterator.hasNext()) {
+        				
+        				if (iterator.hasNext()) {
         					// hay mensaje para enviar a usuario
         					MensajeUsuario mu = iterator.next();
         					
@@ -387,35 +389,38 @@ public class AttendantThread extends Thread {
         	    					selectedKeys.remove();
         	    					
         	    					if (!m_key.isValid()) {
-        	    						break outerloop;
+        	    						break;
         	    					}
         	    					
         	    					// Check what event is available and deal with it
         	    					if (m_key.isWritable()) {
         	    						this.write();
+        	    						
+        	    						// write ok
+        	    						
         	    						logger.debug("Sent message to user id " + m_usuario.get_id().toString());
         	                        	//m_fifo_output.removeFirst();
+			        					
+			        					
+			            		        //logger.debug("mu.get_fecha() 1 " + mu.get_fecha());
+			                        	mu.set_fecha(mu.get_fecha());
+			                        	// logger.debug("mu.get_fecha() 2 " + mu.get_fecha());
+			        					mu.set_leido(true);
+			        					mu.update(m_conn);
         	    					}
         	    					else {
-        	    						break outerloop;
+        	    						break;
         	    					}
         	    		        }
                         	}
         					
         					
-        					// write ok
-        					
-            		        //logger.debug("mu.get_fecha() 1 " + mu.get_fecha());
-                        	mu.set_fecha(mu.get_fecha());
-                        	// logger.debug("mu.get_fecha() 2 " + mu.get_fecha());
-        					mu.set_leido(true);
-        					mu.update(m_conn);
         				}
                 	}
                     //}
-                                        
+                    */                    
                     //Thread.sleep(m_ini.get("General", "socket_timeout", long.class));
-                }
+                } // end while
                 
                 logger.debug("leaving loop");
             }
@@ -423,30 +428,54 @@ public class AttendantThread extends Thread {
     			logger.debug("Exception: " + ex.getMessage());
     			ex.printStackTrace();
             	
-            }
+            }            
             
-            m_socketChannel.close();
+        }
+        catch (Exception e) {
+            logger.debug("Client Error: " + e.toString());
+        }
+        finally {
+        	
+        	try {
+				m_selector.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				logger.debug("Client Error: " + e1.toString());
+				e1.printStackTrace();
+			}
+        	
+        	m_key.cancel();
+        	
+            try {
+				m_socketChannel.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				logger.debug("Client Error: " + e.toString());
+				e.printStackTrace();
+			}
+            
+            m_fifo_output.clear();
             
     		// cierro conexion a la BD
     		try {
+
     			m_conn.close();
-    		} catch (SQLException ex) {
+    			
+     		} catch (SQLException ex) {
     			// TODO Auto-generated catch block
             	logger.debug("SQLException: " + ex.getMessage());
             	logger.debug("SQLState: " + ex.getSQLState());
             	logger.debug("VendorError: " + ex.getErrorCode());
     			ex.printStackTrace();
     		}
-            
-            
-        }
-        catch (IOException e) {
-            logger.debug("Client Error: " + e.toString());
         }
         
         if (m_usuario != null) {
         	//logger.debug("Thread ending. User ID " + m_usuario.get_id().toString() + " Queued messages not sent: " + m_fifo_output.size());
         	logger.debug("Thread ending. User ID " + m_usuario.get_id().toString());
+        }
+        else {
+        	logger.debug("Thread ending.");
         }
 	}
 	
@@ -851,6 +880,91 @@ public class AttendantThread extends Thread {
     				"\"resultado\":\"0\"," +
     				"\"descripcion\":\"Exito\"," +
     				"\"frecuencia\":\"" + m_ini.get("General", "position_frequency") + "\"" +
+    				"}";
+				
+        	}
+        	else if (tipo.equals("MSG_POLEA_MENSAJE")) {
+        		Integer id_usuario;
+        		Double latitud, longitud;
+        		String fecha, mensaje, encontrado;
+        		
+        		mensaje = "";
+        		encontrado = "";
+        		
+        		try {
+        			id_usuario = Integer.decode(data.get("id_usuario").toString());
+					logger.debug("id_usuario: " + id_usuario);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		
+        		try {
+					
+	        		if (m_usuario != null) {
+	        			logger.debug("m_usuario != null");
+	        			if (m_usuario.get_id() != id_usuario) {
+	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
+	        			}
+	        			
+	        		}
+	        		else {
+	        			logger.debug("m_usuario == null");
+	        			logger.debug("m_conn: " + m_conn);
+						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						logger.debug("Usuario.getById ok");
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
+	        		}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+        						
+
+				// hay algun evento asincrono que notificar al cliente?
+            	ArrayList<MensajeUsuario> lmu;
+            	
+				listParameters.clear();
+				
+				listParameters.add(new AbstractMap.SimpleEntry<String, String>("no leido", ""));
+				listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_usuario", m_usuario.get_id().toString()));
+				listParameters.add(new AbstractMap.SimpleEntry<String, String>("mensaje_reciente", m_ini.get("General", "recent")));
+				
+				lmu = MensajeUsuario.seek(m_conn, listParameters, "mu.fecha", "ASC", 0, 1);
+				
+				Iterator<MensajeUsuario> iterator = lmu.iterator();
+				
+				
+				if (iterator.hasNext()) {
+					// hay mensaje para enviar a usuario
+					encontrado = "S";
+					MensajeUsuario mu = iterator.next();
+					
+					mensaje = mu.get_mensaje();
+					
+    		        //logger.debug("mu.get_fecha() 1 " + mu.get_fecha());
+                	mu.set_fecha(mu.get_fecha());
+                	// logger.debug("mu.get_fecha() 2 " + mu.get_fecha());
+					mu.set_leido(true);
+					mu.update(m_conn);
+				}
+				else {
+					// no hay mensaje pendiente
+					encontrado = "N";
+				}
+
+				str_output =
+    				"{" +
+    				"\"tipo\": \"MSG_POLEA_MENSAJE\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
+    				"\"resultado\":\"0\"," +
+    				"\"descripcion\":\"Exito\"," +
+    				"\"encontrado\":\"" + encontrado + "\"," +
+    				"\"mensaje\":\"" + StringEscapeUtils.escapeJava(mensaje) + "\"" +
     				"}";
 				
         	}
@@ -1463,13 +1577,15 @@ public class AttendantThread extends Thread {
         			m_ini.get("DB", "user"), m_ini.get("DB", "password"));
         	*/
         	//logger.debug("m_conn: " + m_conn);
+        	
+        	super.start();
 
         } 
         catch (Exception ex) {
         	logger.debug("Exception: " + ex.getMessage());
         	ex.printStackTrace();
         }
-        super.start();
+        
         //logger.debug("fin start");
     }
 }
