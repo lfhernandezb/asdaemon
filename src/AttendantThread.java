@@ -317,8 +317,12 @@ public class AttendantThread extends Thread {
     		        
                     while (!m_fifo_output.isEmpty()) {
                     	
-                    	logger.debug("something to send to user id " + m_usuario.get_id().toString());
-                    	
+                    	if (m_usuario != null) {
+                    		logger.debug("something to send to user id " + m_usuario.get_id().toString());
+                    	}
+                    	else {
+                    		logger.debug("something to send");
+                    	}
                     	m_key.interestOps(SelectionKey.OP_WRITE);
                     	
         		        // Wait for an event one of the registered channels, or timeout
@@ -340,7 +344,14 @@ public class AttendantThread extends Thread {
     	    					if (m_key.isWritable()) {
     	    						m_str_output = m_fifo_output.element();
     	    						this.write();
-    	    						logger.debug("Sent message to user id " + m_usuario.get_id().toString());
+    	    						
+    	    						if (m_usuario != null) {
+    	    							logger.debug("Sent message to user id " + m_usuario.get_id().toString());
+    	    						}
+    	    						else {
+    	    							logger.debug("Sent message");
+    	    						}
+    	    						
     	                        	m_fifo_output.removeFirst();
     	    					}
     	    		        }
