@@ -20,8 +20,14 @@ public class Usuario
 	private String _apellido_materno;
 	private String _movil;
 	private String _rut;
-	private String _email;
+	private String _correo;
+	private String _correo_opcional;
 	private String _fecha_nacimiento;
+	private Boolean _hombre;
+	private Boolean _contactar_contactos_de_contactos;
+	private Boolean _contactar_desconocidos;
+	private Boolean _publicar_informacion;
+	private String _clave_validacion;
 	private String _direccion;
 	private String _foto;
 	private String _antecedentes_emergencia;
@@ -32,11 +38,17 @@ public class Usuario
 	private Double _latitud;
 	private Double _longitud;
 	private String _parametros;
-	private boolean _borrado;
+	private Boolean _validado;
+	private Boolean _borrado;
 	
 	private final static String _str_sql = 
 			"  SELECT u.id_usuario AS id, u.id_comuna_FK AS id_comuna, u.alias, u.contrasena, u.nombre, u.apellido_paterno, u.apellido_materno, u.movil, " +
-			"  u.rut, u.email, DATE_FORMAT(u.fecha_nacimiento, '%d-%m-%Y') AS fecha_nacimiento, u.direccion, u.foto, u.antecedentes_emergencia, cm.nombre AS comuna, ci.nombre AS ciudad," +
+			"  u.rut, u.correo, u.correo_opcional, DATE_FORMAT(u.fecha_nacimiento, '%d-%m-%Y') AS fecha_nacimiento, 0+u.hombre AS hombre, " +
+			"  0+u.contactar_contactos_de_contactos AS contactar_contactos_de_contactos, " +
+			"  0+u.contactar_desconocidos AS contactar_desconocidos, " +
+			"  0+u.publicar_informacion AS publicar_informacion, u.clave_validacion, " +
+			"  u.direccion, u.foto, u.antecedentes_emergencia, 0+u.validado AS validado, cm.nombre AS comuna, " +
+			"  ci.nombre AS ciudad," +
 			"  rg.nombre AS region, p.nombre AS pais, up.latitud, up.longitud, upm.parametros" +
 		 	"  FROM usuario u" +
 		 	"  JOIN comuna cm ON cm.id_comuna = u.id_comuna_FK" +
@@ -58,11 +70,18 @@ public class Usuario
 		_apellido_materno = null;
 		_movil = null;
 		_rut = null;
-		_email = null;
+		_correo = null;
+		_correo_opcional = null;
 		_fecha_nacimiento = null;
+		_hombre = null;
+		_contactar_contactos_de_contactos = null;
+		_contactar_desconocidos = null;
+		_publicar_informacion = null;
+		_clave_validacion = null;
 		_direccion = null;
 		_foto = null;
 		_antecedentes_emergencia = null;
+		_validado = null;
 	}
 
 	/**
@@ -129,10 +148,17 @@ public class Usuario
 	}
 
 	/**
-	 * @return the _email
+	 * @return the _correo
 	 */
-	public String get_email() {
-		return _email;
+	public String get_correo() {
+		return _correo;
+	}
+
+	/**
+	 * @return the _correo_opcional
+	 */
+	public String get_correo_opcional() {
+		return _correo_opcional;
 	}
 
 	/**
@@ -140,6 +166,41 @@ public class Usuario
 	 */
 	public String get_fecha_nacimiento() {
 		return _fecha_nacimiento;
+	}
+
+	/**
+	 * @return the _hombre
+	 */
+	public Boolean get_hombre() {
+		return _hombre;
+	}
+
+	/**
+	 * @return the _contactar_contactos_de_contactos
+	 */
+	public Boolean get_contactar_contactos_de_contactos() {
+		return _contactar_contactos_de_contactos;
+	}
+
+	/**
+	 * @return the _contactar_desconocidos
+	 */
+	public Boolean get_contactar_desconocidos() {
+		return _contactar_desconocidos;
+	}
+
+	/**
+	 * @return the _publicar_informacion
+	 */
+	public Boolean get_publicar_informacion() {
+		return _publicar_informacion;
+	}
+
+	/**
+	 * @return the _clave_validacion
+	 */
+	public String get_clave_validacion() {
+		return _clave_validacion;
 	}
 
 	/**
@@ -161,6 +222,13 @@ public class Usuario
 	 */
 	public String get_antecedentes_emergencia() {
 		return _antecedentes_emergencia;
+	}
+
+	/**
+	 * @return the _validado
+	 */
+	public Boolean get_validado() {
+		return _validado;
 	}
 
 	/**
@@ -283,10 +351,17 @@ public class Usuario
 	}
 
 	/**
-	 * @param _email the _email to set
+	 * @param _correo the _correo to set
 	 */
-	public void set_email(String _email) {
-		this._email = _email;
+	public void set_correo(String _correo) {
+		this._correo = _correo;
+	}
+
+	/**
+	 * @param _correo the _correo_opcional to set
+	 */
+	public void set_correo_opcional(String _correo_opcional) {
+		this._correo_opcional = _correo_opcional;
 	}
 
 	/**
@@ -294,6 +369,41 @@ public class Usuario
 	 */
 	public void set_fecha_nacimiento(String _fecha_nacimiento) {
 		this._fecha_nacimiento = _fecha_nacimiento;
+	}
+
+	/**
+	 * @param _hombre the _hombre to set
+	 */
+	public void set_hombre(Boolean _hombre) {
+		this._hombre = _hombre;
+	}
+
+	/**
+	 * @param _contactar_contactos_de_contactos the _contactar_contactos_de_contactos to set
+	 */
+	public void set_contactar_contactos_de_contactos(Boolean _contactar_contactos_de_contactos) {
+		this._contactar_contactos_de_contactos = _contactar_contactos_de_contactos;
+	}
+
+	/**
+	 * @param _contactar_desconocidos the _contactar_desconocidos to set
+	 */
+	public void set_contactar_desconocidos(Boolean _contactar_desconocidos) {
+		this._contactar_desconocidos = _contactar_desconocidos;
+	}
+
+	/**
+	 * @param _publicar_informacion the _publicar_informacion to set
+	 */
+	public void set_publicar_informacion(Boolean _publicar_informacion) {
+		this._publicar_informacion = _publicar_informacion;
+	}
+
+	/**
+	 * @param _clave_validacion the _clave_validacion to set
+	 */
+	public void set_clave_validacion(String _clave_validacion) {
+		this._clave_validacion = _clave_validacion;
 	}
 
 	/**
@@ -315,6 +425,13 @@ public class Usuario
 	 */
 	public void set_antecedentes_emergencia(String _antecedentes_emergencia) {
 		this._antecedentes_emergencia = _antecedentes_emergencia;
+	}
+
+	/**
+	 * @param _validado the _validado to set
+	 */
+	public void set_validado(Boolean _validado) {
+		this._validado = _validado;
 	}
 
 	/**
@@ -387,11 +504,19 @@ public class Usuario
 			ret.set_apellido_materno(p_rs.getString("apellido_materno"));
 			ret.set_movil(p_rs.getString("movil"));
 			ret.set_rut(p_rs.getString("rut"));
-			ret.set_email(p_rs.getString("email"));
+			ret.set_correo(p_rs.getString("correo"));
+			ret.set_correo_opcional(p_rs.getString("correo_opcional"));
 			ret.set_fecha_nacimiento(p_rs.getString("fecha_nacimiento"));
+			ret.set_hombre(p_rs.getBoolean("hombre"));
+			ret.set_contactar_contactos_de_contactos(p_rs.getBoolean("contactar_contactos_de_contactos"));
+			ret.set_hombre(p_rs.getBoolean("hombre"));
+			ret.set_contactar_desconocidos(p_rs.getBoolean("contactar_desconocidos"));
+			ret.set_publicar_informacion(p_rs.getBoolean("publicar_informacion"));
+			ret.set_clave_validacion(p_rs.getString("clave_validacion"));
 			ret.set_direccion(p_rs.getString("direccion"));
 			ret.set_foto(p_rs.getString("foto"));
 			ret.set_antecedentes_emergencia(p_rs.getString("antecedentes_emergencia"));
+			ret.set_validado(p_rs.getBoolean("validado"));
 			ret.set_comuna(p_rs.getString("comuna"));
 			ret.set_ciudad(p_rs.getString("ciudad"));
 			ret.set_region(p_rs.getString("region"));
@@ -412,31 +537,6 @@ public class Usuario
 		return ret;
 	}
     
-	
-	/*
-	public static function seek(p_param) {
-		global fc;
-		
-		str_sql =
-			"  SELECT r.id_repuesto as id, p.descripcion as plataforma, f.descripcion as fabricante, m.descripcion as modelo, re.descripcion as radio_estacion, c.descripcion as ciudad, rg.descripcion as region" +
-		 	"  FROM repuesto r" +
-			"  JOIN plataforma p ON p.id_plataforma = r.id_plataforma_FK" +
-			"  JOIN radio_estacion re ON re.id_radio_estacion = r.id_radio_estacion_FK" +
-		    "  JOIN ciudad c ON c.id_ciudad = re.id_ciudad_FK" +
-		    "  JOIN region rg ON rg.id_region = c.id_region_FK" +
-			"  JOIN modelo m ON m.id_modelo = r.id_modelo_FK" +
-			"  JOIN fabricante f ON f.id_fabricante = m.id_fabricante_FK" +
-			"  WHERE f.descripcion LIKE "%p_param%"" +
-			"  OR m.descripcion LIKE "%p_param%"" +
-			"  OR r.descripcion LIKE "%p_param%"" +
-			"  OR p.descripcion LIKE "%p_param%"" +
-			"  AND r.ubicacion IS NULL";
-		
-		// echo str_sql . "<br>";
-		
-		return fc.getLink().QueryArray(str_sql, MYSQL_ASSOC);
-	}
-	*/
 	
 	public static Usuario getByParameter(Connection p_conn, String p_key, String p_value) throws Exception {
 		Usuario ret = null;
@@ -507,8 +607,8 @@ public class Usuario
 		return getByParameter(p_conn, "alias", "'" + p_alias + "'");
 	}
 	
-	public static Usuario getByEmail(Connection p_conn, String p_email) throws Exception {
-		return getByParameter(p_conn, "email", "'" + p_email + "'");
+	public static Usuario getByEmail(Connection p_conn, String p_correo) throws Exception {
+		return getByParameter(p_conn, "correo", "'" + p_correo + "'");
 	}
 	
 	public static Usuario getByMovil(Connection p_conn, String p_movil) throws Exception {
@@ -673,18 +773,26 @@ public class Usuario
 
     	String str_sql =
 			"  UPDATE usuario" +
-			"  SET alias = " + (_alias != null ? "'" + _alias + "'" : "null") + "," +
+			"  SET " +
+			"  alias = " + (_alias != null ? "'" + _alias + "'" : "null") + "," +
 			"  contrasena = " + (_contrasena != null ? "'" + _contrasena + "'" : "null") + "," +
 			"  nombre = " + (_nombre != null ? "'" + _nombre + "'" : "null") + "," +
 			"  apellido_paterno = " + (_apellido_paterno != null ? "'" + _apellido_paterno + "'" : "null") + "," +
 			"  apellido_materno = " + (_apellido_materno != null ? "'" + _apellido_materno + "'" : "null") + "," +
 			"  movil = " + (_movil != null ? "'" + _movil + "'" : "null") + "," +
 			"  rut = " + (_rut != null ? "'" + _rut + "'" : "null") + "," +
-			"  email = " + (_email != null ? "'" + _email + "'" : "null") + "," +
+			"  correo = " + (_correo != null ? "'" + _correo + "'" : "null") + "," +
+			"  correo_opcional = " + (_correo_opcional != null ? "'" + _correo_opcional + "'" : "null") + "," +
 			"  fecha_nacimiento = " + (_fecha_nacimiento != null ? "STR_TO_DATE('" + _fecha_nacimiento + "', '%d-%m-%Y')" : "null") + "," +
+			"  hombre = " + (_hombre != null ? "b'" + (_hombre ? 1 : 0) + "'" : "null") + "," +
+			"  contactar_contactos_de_contactos = " + (_contactar_contactos_de_contactos != null ? "b'" + (_contactar_contactos_de_contactos ? 1 : 0) + "'" : "null") + "," +
+			"  contactar_desconocidos = " + (_contactar_desconocidos != null ? "b'" + (_contactar_desconocidos ? 1 : 0) + "'" : "null") + "," +
+			"  leido = " + (_publicar_informacion != null ? "b'" + (_publicar_informacion ? 1 : 0) + "'" : "null") + "," +
+			"  clave_validacion = " + (_clave_validacion != null ? "'" + _clave_validacion + "'" : "null") + "," +
 			"  direccion = " + (_direccion != null ? "'" + _direccion + "'" : "null") + "," +
 			"  foto = " + (_foto != null ? "'" + _foto + "'" : "null") + "," +
-			"  antecedentes_emergencia = " + (_antecedentes_emergencia != null ? "'" + _antecedentes_emergencia + "'" : "null") +
+			"  antecedentes_emergencia = " + (_antecedentes_emergencia != null ? "'" + _antecedentes_emergencia + "'" : "null") + "," +
+			"  validado = " + (_validado != null ? "b'" + (_validado ? 1 : 0) + "'" : "null") +
 			"  WHERE id_usuario = " + Integer.toString(this._id);
 		
 		try {
@@ -741,8 +849,14 @@ public class Usuario
 			"  apellido_materno," +
 			"  movil," +
 			"  rut," +
-			"  email," +
+			"  correo," +
+			"  correo_opcional," +
 			"  fecha_nacimiento," +
+			"  hombre," +
+			"  contactar_contactos_de_contactos," +
+			"  contactar_desconocidos," +
+			"  publicar_informacion," +
+			"  clave_validacion," +
 			"  direccion," +
 			"  foto," +
 			"  antecedentes_emergencia" +
@@ -757,8 +871,14 @@ public class Usuario
 			"  " + (_apellido_materno != null ? "'" + _apellido_materno + "'" : "null") + "," +
 			"  " + (_movil != null ? "'" + _movil + "'" : "null") + "," +
 			"  " + (_rut != null ? "'" + _rut + "'" : "null") + "," +
-			"  " + (_email != null ? "'" + _email + "'" : "null") + "," +
+			"  " + (_correo != null ? "'" + _correo + "'" : "null") + "," +
+			"  " + (_correo_opcional != null ? "'" + _correo_opcional + "'" : "null") + "," +
 			"  " + (_fecha_nacimiento != null ? "STR_TO_DATE('" + _fecha_nacimiento + "', '%d-%m-%Y')" : "null") + "," +
+			"  " + (_hombre != null ? "b'" + (_hombre ? 1 : 0) + "'" : "null") + "," +
+			"  " + (_contactar_contactos_de_contactos != null ? "b'" + (_contactar_contactos_de_contactos ? 1 : 0) + "'" : "null") + "," +
+			"  " + (_contactar_desconocidos != null ? "b'" + (_contactar_desconocidos ? 1 : 0) + "'" : "null") + "," +
+			"  " + (_publicar_informacion != null ? "b'" + (_publicar_informacion ? 1 : 0) + "'" : "null") + "," +
+			"  " + (_clave_validacion != null ? "'" + _clave_validacion + "'" : "null") + "," +
 			"  " + (_direccion != null ? "'" + _direccion + "'" : "null") + "," +
 			"  " + (_foto != null ? "'" + _foto + "'" : "null") + "," +
 			"  " + (_antecedentes_emergencia != null ? "'" + _antecedentes_emergencia + "'" : "null") +
@@ -829,7 +949,7 @@ public class Usuario
 	public String toString() {
 		return "Usuario [_id=" + _id + ", _alias=" + _alias + ", _nombre="
 				+ _nombre + ", _apellido_paterno=" + _apellido_paterno
-				+ ", _movil=" + _movil + ", _email=" + _email + ", _latitud="
+				+ ", _movil=" + _movil + ", _correo=" + _correo + ", _latitud="
 				+ _latitud + ", _longitud=" + _longitud + "]";
 	}
 	

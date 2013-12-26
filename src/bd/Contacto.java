@@ -17,20 +17,20 @@ import java.util.ArrayList;
 public class Contacto {
 	private Integer _id;
 	private Integer _id_usuario;
-	private String _id_usuario_contacto;
-	private String _movil;
-	private String _descripcion;
+	private Integer _id_usuario_contacto;
+	private String _correo;
+	private String _relacion;
 	
 	private final static String _str_sql = 
-			"  SELECT ct.id_contacto AS id, ct.id_usuario_FK AS id_usuario, ct.id_usuario_contacto_FK AS id_usuario_contacto, ct.movil, ct.descripcion" +
+			"  SELECT ct.id_contacto AS id, ct.id_usuario_FK AS id_usuario, ct.id_usuario_contacto_FK AS id_usuario_contacto, ct.correo, ct.relacion" +
 		 	"  FROM contacto ct";	 	
 
 	public Contacto() {
 		_id = null;
 		_id_usuario = null;
 		_id_usuario_contacto = null;
-		_movil = null;
-		_descripcion = null;
+		_correo = null;
+		_relacion = null;
 	}
 
 	/**
@@ -50,22 +50,22 @@ public class Contacto {
 	/**
 	 * @return the _id_usuario_contacto
 	 */
-	public String get_id_usuario_contacto() {
+	public Integer get_id_usuario_contacto() {
 		return _id_usuario_contacto;
 	}
 	
 	/**
-	 * @return the _movil
+	 * @return the _correo
 	 */
-	public String get_movil() {
-		return _movil;
+	public String get_correo() {
+		return _correo;
 	}	
 
 	/**
-	 * @return the _descripcion
+	 * @return the _relacion
 	 */
-	public String get_descripcion() {
-		return _descripcion;
+	public String get_relacion() {
+		return _relacion;
 	}
 
 	/**
@@ -85,22 +85,22 @@ public class Contacto {
 	/**
 	 * @param _id_usuario_contacto the _id_usuario_contacto to set
 	 */
-	public void set_id_usuario_contacto(String _id_usuario_contacto) {
+	public void set_id_usuario_contacto(Integer _id_usuario_contacto) {
 		this._id_usuario_contacto = _id_usuario_contacto;
 	}
 
 	/**
-	 * @param _descripcion the _descripcion to set
+	 * @param _relacion the _relacion to set
 	 */
-	public void set_movil(String _movil) {
-		this._movil = _movil;
+	public void set_correo(String _correo) {
+		this._correo = _correo;
 	}
 
 	/**
-	 * @param _descripcion the _descripcion to set
+	 * @param _relacion the _relacion to set
 	 */
-	public void set_descripcion(String _descripcion) {
-		this._descripcion = _descripcion;
+	public void set_relacion(String _relacion) {
+		this._relacion = _relacion;
 	}
 
 	public static Contacto fromRS(ResultSet p_rs) throws SQLException {
@@ -109,9 +109,9 @@ public class Contacto {
 		try {
 			ret.set_id(p_rs.getInt("id"));
 			ret.set_id_usuario(p_rs.getInt("id_usuario"));
-			ret.set_id_usuario_contacto(p_rs.getString("id_usuario_contacto"));
-			ret.set_movil(p_rs.getString("movil"));
-			ret.set_descripcion(p_rs.getString("descripcion"));
+			ret.set_id_usuario_contacto(p_rs.getInt("id_usuario_contacto"));
+			ret.set_correo(p_rs.getString("correo"));
+			ret.set_relacion(p_rs.getString("relacion"));
 		}
 		catch (SQLException ex){
 			// handle any errors
@@ -206,7 +206,7 @@ public class Contacto {
 		return ret;		
 	}
 	
-	public static Contacto getByIdUsuario(Connection p_conn, String p_id_usuario_contacto) throws Exception {
+	public static Contacto getByIdUsuarioIdUsuarioContacto(Connection p_conn, String p_id_usuario_contacto) throws Exception {
 		return getByParameter(p_conn, "id_usuario_FK", "'" + p_id_usuario_contacto + "'");
 	}
 	
@@ -236,8 +236,8 @@ public class Contacto {
 				else if (p.getKey().equals("id_usuario_contacto")) {
 					array_clauses.add("ct.id_usuario_contacto_FK = " + p.getValue());
 				}
-				else if (p.getKey().equals("descripcion")) {
-					array_clauses.add("ct.descripcion = " + p.getValue());
+				else if (p.getKey().equals("correo")) {
+					array_clauses.add("ct.correo = '" + p.getValue() + "'");
 				}
 			}
 								
@@ -321,8 +321,8 @@ public class Contacto {
 			"  SET " +
 			"  id_usuario_FK = " + (_id_usuario != null ? _id_usuario : "null") + "," +
 			"  id_usuario_contacto_FK = " + (_id_usuario_contacto != null ? _id_usuario_contacto : "null") + "," +
-			"  movil = " + (_movil != null ? "'" + _movil + "'" : "null") + "," +
-			"  descripcion = " + (_descripcion != null ? "'" + _descripcion + "'" : "null") +
+			"  correo = " + (_correo != null ? "'" + _correo + "'" : "null") + "," +
+			"  relacion = " + (_relacion != null ? "'" + _relacion + "'" : "null") +
 			"  WHERE id_contacto = " + Integer.toString(this._id);
 		
 		try {
@@ -373,15 +373,15 @@ public class Contacto {
 			"  (" +
 			"  id_usuario_FK," +
 			"  id_usuario_contacto_FK," +
-			"  movil," +
-			"  descripcion" +
+			"  correo," +
+			"  relacion" +
 			"  )" +
 			"  VALUES" +
 			"  (" +
 			"  " + (_id_usuario != null ? _id_usuario.toString() : "null") + "," +
 			"  " + (_id_usuario_contacto != null ? _id_usuario_contacto.toString() : "null") + "," +
-			"  " + (_movil != null ? "'" + _movil + "'" : "null") + "," +
-			"  " + (_descripcion != null ? "'" + _descripcion + "'" : "null") +
+			"  " + (_correo != null ? "'" + _correo + "'" : "null") + "," +
+			"  " + (_relacion != null ? "'" + _relacion + "'" : "null") +
 			"  )";
 		
 		try {

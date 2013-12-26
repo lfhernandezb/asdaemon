@@ -27,7 +27,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.Queue;
+
+import javax.mail.*;
+import javax.mail.internet.*;
+import javax.activation.*;
 
 import org.ini4j.Wini;
 import org.json.JSONArray;
@@ -94,7 +99,6 @@ public class AttendantThread extends Thread {
 		m_bKeepWorking = true;
 		m_socketChannel = p_socketChannel;
 		m_conn = conn;
-		m_usuario = null;
 		m_selector = SelectorProvider.provider().openSelector();
 		
 		m_readBuffer = ByteBuffer.allocate(8192);
@@ -106,6 +110,7 @@ public class AttendantThread extends Thread {
 		m_key = null;
 		m_str_input = "";
 		m_html_input = "";
+		m_usuario = null;
 		//logger.debug("fin constructor");
 		
 		m_fifo_output = new LinkedList<String>();
@@ -484,42 +489,49 @@ public class AttendantThread extends Thread {
 	}
 
 	protected void ProcessRequest() throws Exception {
-		JSONObject data;
-		String tipo, pais, region, ciudad, comuna, str_output;
+		JSONObject jo_data, jo_data_o, jo_output;
+		String str_tipo, str_resultado, str_descripcion; //, pais, region, ciudad, comuna; //, str_output;
 		long token;
 		ArrayList<Comuna> listaComuna;
 		ArrayList<AbstractMap.SimpleEntry<String, String>> listParameters;
 		
-		tipo = "";
-		str_output = "";
+		str_tipo = "";
+		//str_output = "";
 		token = 0;
+		
+		str_resultado = "0";
+		str_descripcion = "Exito";
+		
+		jo_data_o = new JSONObject();
+		
+		jo_output = new JSONObject();
 		
         try {
         	listParameters = new ArrayList<AbstractMap.SimpleEntry<String, String>>();
         	
-        	tipo = m_jo.get("tipo").toString();
-        	data = m_jo.getJSONObject("data");
+        	str_tipo = m_jo.get("tipo").toString();
+        	
+        	jo_output.put("tipo", str_tipo);
+        	
+        	jo_data = m_jo.getJSONObject("data");
         	
         	// todos los requests traen token
         	
-        	token = data.getLong("token");
+        	token = jo_data.getLong("token");
         	
-        	logger.debug("Tipo Req: " + tipo);
+        	jo_output.put("token", token);
         	
-        	if (tipo.equals("MSG_REGISTRO")) {
-        		Usuario u;
+        	logger.debug("Tipo Req: " + str_tipo);
+        	
+        	if (str_tipo.equals("MSG_REGISTRO")) {
         		
-        		if (m_usuario != null) {
-        			throw new Exception("No es posible registrar usuario cuando ya hubo Login");
-        		}
-        		
-        		u = new Usuario();
+        		m_usuario = new Usuario();
         		
         		try {
-					String alias = data.get("alias").toString();
+					String alias = jo_data.get("alias").toString();
 					logger.debug("alias: " + alias);
 					
-					u.set_alias(alias);
+					m_usuario.set_alias(alias);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -527,10 +539,10 @@ public class AttendantThread extends Thread {
 				}
         		
         		try {
-					String contrasena = data.get("contrasena").toString();
+					String contrasena = jo_data.get("contrasena").toString();
 					logger.debug("contrasena: " + contrasena);
 					
-					u.set_contrasena(contrasena);
+					m_usuario.set_contrasena(contrasena);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -538,10 +550,10 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					String nombre = data.get("nombre").toString();
+					String nombre = jo_data.get("nombre").toString();
 					logger.debug("nombre: " + nombre);
 					
-					u.set_nombre(nombre);
+					m_usuario.set_nombre(nombre);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -549,10 +561,10 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					String apellido_paterno = data.get("apellido_paterno").toString();
+					String apellido_paterno = jo_data.get("apellido_paterno").toString();
 					logger.debug("apellido_paterno: " + apellido_paterno);
 					
-					u.set_apellido_paterno(apellido_paterno);
+					m_usuario.set_apellido_paterno(apellido_paterno);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -560,10 +572,10 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					String apellido_materno = data.get("apellido_materno").toString();
+					String apellido_materno = jo_data.get("apellido_materno").toString();
 					logger.debug("apellido_materno: " + apellido_materno);
 					
-					u.set_apellido_materno(apellido_materno);
+					m_usuario.set_apellido_materno(apellido_materno);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -571,18 +583,18 @@ public class AttendantThread extends Thread {
 				}
 				
         		try {
-					String movil = data.get("movil").toString();
+					String movil = jo_data.get("movil").toString();
 					logger.debug("movil: " + movil);
 					
-					u.set_movil(movil);
+					m_usuario.set_movil(movil);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo movil no presente" + ": " + e.getMessage());
 				}
-
+				/*
         		try {
-					String rut = data.get("rut").toString();
+					String rut = jo_data.get("rut").toString();
 					logger.debug("rut: " + rut);
 					
 					u.set_rut(rut);
@@ -591,12 +603,12 @@ public class AttendantThread extends Thread {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo rut no presente" + ": " + e.getMessage());
 				}
-
+				*/
         		try {
-					String email = data.get("email").toString();
+					String email = jo_data.get("email").toString();
 					logger.debug("email: " + email);
 					
-					u.set_email(email);
+					m_usuario.set_correo(email);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -604,17 +616,92 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					String fecha_nacimiento = data.get("fecha_nacimiento").toString();
+					String email_opcional = jo_data.get("email_opcional").toString();
+					logger.debug("email_opcional: " + email_opcional);
+					
+					m_usuario.set_correo_opcional(email_opcional);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					logger.debug("Atributo email_opcional no presente" + ": " + e.getMessage());
+				}
+
+				try {
+					String fecha_nacimiento = jo_data.get("fecha_nacimiento").toString();
 					logger.debug("fecha_nacimiento: " + fecha_nacimiento);
 					
-					u.set_fecha_nacimiento(fecha_nacimiento);
+					m_usuario.set_fecha_nacimiento(fecha_nacimiento);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo fecha_nacimiento no presente. " .concat(e.getMessage()));
 				}
 
-        		try {
-					String direccion = data.get("direccion").toString();
+				try {
+					Boolean b = false;
+					String hombre = jo_data.get("hombre").toString();
+					logger.debug("hombre: " + hombre);
+					
+					if (hombre.equals("true")) {
+						b = true;
+					}
+					
+					m_usuario.set_hombre(b);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo hombre no presente. " .concat(e.getMessage()));
+				}
+
+				try {
+					Boolean b = false;
+					String contactar_contactos_de_contactos = jo_data.get("contactar_contactos_de_contactos").toString();
+					logger.debug("contactar_contactos_de_contactos: " + contactar_contactos_de_contactos);
+					
+					if (contactar_contactos_de_contactos.equals("true")) {
+						b = true;
+					}
+					
+					m_usuario.set_contactar_contactos_de_contactos(b);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo contactar_contactos_de_contactos no presente. " .concat(e.getMessage()));
+				}
+
+				try {
+					Boolean b = false;
+					String contactar_desconocidos = jo_data.get("contactar_desconocidos").toString();
+					logger.debug("contactar_desconocidos: " + contactar_desconocidos);
+					
+					if (contactar_desconocidos.equals("true")) {
+						b = true;
+					}
+					
+					m_usuario.set_contactar_desconocidos(b);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo contactar_desconocidos no presente. " .concat(e.getMessage()));
+				}
+
+				try {
+					Boolean b = false;
+					String publicar_informacion = jo_data.get("publicar_informacion").toString();
+					logger.debug("publicar_informacion: " + publicar_informacion);
+					
+					if (publicar_informacion.equals("true")) {
+						b = true;
+					}
+					
+					m_usuario.set_publicar_informacion(b);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo publicar_informacion no presente. " .concat(e.getMessage()));
+				}
+				/*
+				try {
+					String direccion = jo_data.get("direccion").toString();
 					logger.debug("direccion: " + direccion);
 					
 					u.set_direccion(direccion);
@@ -623,9 +710,10 @@ public class AttendantThread extends Thread {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo direccion no presente" + ": " + e.getMessage());
 				}
-
+				*/
+				/*
         		try {
-					String foto = data.get("foto").toString();
+					String foto = jo_data.get("foto").toString();
 					logger.debug("foto: " + foto);
 					
 					u.set_foto(foto);
@@ -634,20 +722,20 @@ public class AttendantThread extends Thread {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo foto no presente" + ": " + e.getMessage());
 				}
-
+				*/
         		try {
-					String antecedentes_emergencia = data.get("antecedentes_emergencia").toString();
+					String antecedentes_emergencia = jo_data.get("antecedentes_emergencia").toString();
 					logger.debug("antecedentes_emergencia: " + antecedentes_emergencia);
 					
-					u.set_antecedentes_emergencia(antecedentes_emergencia);
+					m_usuario.set_antecedentes_emergencia(antecedentes_emergencia);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo antecedentes_emergencia no presente" + ": " + e.getMessage());
 				}
-
+				/*
 				try {
-					comuna = data.get("comuna").toString();
+					comuna = jo_data.get("comuna").toString();
 					logger.debug("comuna: " + comuna);
 					
 				} catch (Exception e) {
@@ -656,7 +744,7 @@ public class AttendantThread extends Thread {
 				}
 
 				try {
-					ciudad = data.get("ciudad").toString();
+					ciudad = jo_data.get("ciudad").toString();
 					logger.debug("ciudad: " + ciudad);
 					
 				} catch (Exception e) {
@@ -665,7 +753,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-        			region = data.get("region").toString();
+        			region = jo_data.get("region").toString();
 					logger.debug("region: " + region);
 					
 				} catch (Exception e) {
@@ -674,14 +762,15 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					pais = data.get("pais").toString();
+					pais = jo_data.get("pais").toString();
 					logger.debug("pais: " + pais);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo pais no presente" + ": " + e.getMessage());
 				}
-				
+				*/
+				/*
 				// trato de obtener el id_comuna
 				
 				listParameters.clear();
@@ -702,24 +791,31 @@ public class AttendantThread extends Thread {
 				}
 				
 				u.set_id_comuna(listaComuna.get(0).get_id());
-				
+				*/
 				// ya existe usuario con el alias especificado?
-				if (Usuario.getByAlias(m_conn, u.get_alias()) != null) {
-					throw new Exception("Ya existe usuario con el alias '" + u.get_alias() + "'");
+				if (Usuario.getByAlias(m_conn, m_usuario.get_alias()) != null) {
+					throw new Exception("Ya existe usuario con el alias '" + m_usuario.get_alias() + "'");
 				}
 				
 				// ya existe usuario con el email especificado?
-				if (Usuario.getByEmail(m_conn, u.get_email()) != null) {
-					throw new Exception("Ya existe usuario con el email '" + u.get_email() + "'");
+				if (Usuario.getByEmail(m_conn, m_usuario.get_correo()) != null) {
+					throw new Exception("Ya existe usuario con el email '" + m_usuario.get_correo() + "'");
 				}
 
 				// ya existe usuario con el movil especificado?
-				if (Usuario.getByMovil(m_conn, u.get_movil()) != null) {
-					throw new Exception("Ya existe usuario con el movil '" + u.get_movil() + "'");
+				if (Usuario.getByMovil(m_conn, m_usuario.get_movil()) != null) {
+					throw new Exception("Ya existe usuario con el movil '" + m_usuario.get_movil() + "'");
 				}
-
-				u.insert(m_conn);
 				
+				// creo la clave para validacion
+				m_usuario.set_clave_validacion(Util.generateRandomWord(6));
+				// envio correo a usuario
+				
+				Util.sendMail(m_usuario.get_correo(), "Clave de Verificaci&oacute;n", "Su clave de verificaci&oacute;n es: " + m_usuario.get_clave_validacion());
+								
+			    // se guarda con valido = false, el default para la columna
+			    m_usuario.insert(m_conn);
+				/*
 				str_output =
         				"{" +
         				"\"tipo\": \"MSG_REGISTRO\"," +
@@ -730,86 +826,15 @@ public class AttendantThread extends Thread {
         				"    \"id_usuario\":\"" + u.get_id().toString() + "\"" +
         				"}" +
         				"}";
-				
-				m_usuario = u;
-        	}
-        	else if (tipo.equals("MSG_ACTUALIZA_CONTACTOS")) {
-        		Integer id_usuario;
-        		
-				try {
-					id_usuario = Integer.decode(data.get("id_usuario").toString());
-					logger.debug("id_usuario: " + id_usuario);
-					
-	        		if (m_usuario != null) {
-	        			if (m_usuario.get_id() != id_usuario) {
-	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
-	        			}
-	        			
-	        		}
-	        		else {
-						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-						
-						if (m_usuario == null) {
-							throw new Exception("No existe el usuario con id " + id_usuario.toString());
-						}
-	        		}
-					
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new Exception(e.getMessage());
-				}
-
-				try {
-					JSONArray ja = data.getJSONArray("contactos");
-					
-					// borro los contactos actuales
-					Contacto.delete(m_conn, m_usuario.get_id());
-					
-					for (int i = 0; i < ja.length(); i++) {
-						String descripcion = ja.getJSONObject(i).getString("descripcion");
-						String movil = ja.getJSONObject(i).getString("movil");
-						
-						Usuario uc = Usuario.getByMovil(m_conn, movil);
-						
-						Contacto ct = new Contacto();
-						
-						ct.set_id_usuario(m_usuario.get_id());
-						ct.set_descripcion(descripcion);
-						ct.set_movil(movil);
-						
-						if (uc != null) {
+				*/
 							
-							ct.set_id_usuario_contacto(uc.get_id().toString());
-						}
-						else {
-							// si el contacto no esta registrado, no tengo id_usuario... me quedo con movil
-						}
-						
-						ct.insert(m_conn);
-					}
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new Exception(e.getMessage());
-				}
-
-				str_output =
-    				"{" +
-    				"\"tipo\": \"MSG_ACTUALIZA_CONTACTOS\"," +
-    				"\"token\":\"" + String.valueOf(token) + "\"," + 
-    				"\"resultado\":\"0\"," +
-    				"\"descripcion\":\"Exito\"," + 
-    				"}";
-				
+				//m_usuario = u;
         	}
-        	else if (tipo.equals("MSG_POSICION")) {
+        	else if (str_tipo.equals("MSG_ACTUALIZA_CONTACTOS")) {
         		Integer id_usuario;
-        		Double latitud, longitud;
-        		String fecha;
         		
         		try {
-        			id_usuario = Integer.decode(data.get("id_usuario").toString());
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
 					logger.debug("id_usuario: " + id_usuario);
 					
 				} catch (Exception e) {
@@ -820,29 +845,91 @@ public class AttendantThread extends Thread {
         		
         		try {
 					
-	        		if (m_usuario != null) {
-	        			logger.debug("m_usuario != null");
-	        			if (m_usuario.get_id() != id_usuario) {
-	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
-	        			}
-	        			
-	        		}
-	        		else {
-	        			logger.debug("m_usuario == null");
-	        			logger.debug("m_conn: " + m_conn);
-						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-						logger.debug("Usuario.getById ok");
-						if (m_usuario == null) {
-							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+
+				try {
+					JSONArray ja = jo_data.getJSONArray("contactos");
+					
+					// borro los contactos actuales
+					Contacto.delete(m_conn, m_usuario.get_id());
+					
+					for (int i = 0; i < ja.length(); i++) {
+						String relacion = ja.getJSONObject(i).getString("relacion");
+						String correo = ja.getJSONObject(i).getString("correo");
+						String accion = ja.getJSONObject(i).getString("accion");
+						
+						Usuario uc = Usuario.getByEmail(m_conn, correo);
+						
+						Contacto ct = new Contacto();
+						
+						ct.set_id_usuario(m_usuario.get_id());
+						ct.set_relacion(relacion);
+						ct.set_correo(correo);
+						
+						if (uc != null) {
+							
+							ct.set_id_usuario_contacto(uc.get_id());
 						}
-	        		}
+						else {
+							// si el contacto no esta registrado, no tengo id_usuario... me quedo con correo
+						}
+						
+						ct.insert(m_conn);
+					}
 				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					throw new Exception(e.getMessage());
+				}
+				/*
+				str_output =
+    				"{" +
+    				"\"tipo\": \"MSG_ACTUALIZA_CONTACTOS\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
+    				"\"resultado\":\"0\"," +
+    				"\"descripcion\":\"Exito\"," + 
+    				"}";
+				*/
+        	}
+        	else if (str_tipo.equals("MSG_POSICION")) {
+        		Integer id_usuario;
+        		Double latitud, longitud;
+        		String fecha;
+        		
+        		try {
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
+					logger.debug("id_usuario: " + id_usuario);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
 				}
         		
         		try {
-					latitud = Double.valueOf(data.get("latitud").toString());
+					latitud = Double.valueOf(jo_data.get("latitud").toString());
 					logger.debug("latitud: " + latitud);
 					
 				} catch (Exception e) {
@@ -851,7 +938,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					longitud = Double.valueOf(data.get("longitud").toString());
+					longitud = Double.valueOf(jo_data.get("longitud").toString());
 					logger.debug("longitud: " + longitud);
 					
 				} catch (Exception e) {
@@ -861,7 +948,7 @@ public class AttendantThread extends Thread {
 
 				// si bien viene la fecha/hora en el requerimiento, la seteamos a la fecha/hora actual
         		try {
-					fecha = data.get("fecha").toString();
+					fecha = jo_data.get("fecha").toString();
 					logger.debug("fecha: " + fecha);
 					
 				} catch (Exception e) {
@@ -872,7 +959,7 @@ public class AttendantThread extends Thread {
 				Usuario.setPosicion(m_conn, m_usuario.get_id(), latitud, longitud, "DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
 				
 				logger.debug(UsuarioPosicion.getByIdUsuario(m_conn, m_usuario.get_id()).toString());
-				
+				/*
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_POSICION\"," +
@@ -881,9 +968,12 @@ public class AttendantThread extends Thread {
     				"\"descripcion\":\"Exito\"," +
     				"\"frecuencia\":\"" + m_ini.get("General", "position_frequency") + "\"" +
     				"}";
+    			*/
+				
+				jo_output.put("frecuencia", m_ini.get("General", "position_frequency"));
 				
         	}
-        	else if (tipo.equals("MSG_POLEA_MENSAJE")) {
+        	else if (str_tipo.equals("MSG_POLEA_MENSAJE")) {
         		Integer id_usuario;
         		Double latitud, longitud;
         		String fecha, mensaje, encontrado;
@@ -892,7 +982,7 @@ public class AttendantThread extends Thread {
         		encontrado = "";
         		
         		try {
-        			id_usuario = Integer.decode(data.get("id_usuario").toString());
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
 					logger.debug("id_usuario: " + id_usuario);
 					
 				} catch (Exception e) {
@@ -903,23 +993,13 @@ public class AttendantThread extends Thread {
         		
         		try {
 					
-	        		if (m_usuario != null) {
-	        			logger.debug("m_usuario != null");
-	        			if (m_usuario.get_id() != id_usuario) {
-	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
-	        			}
-	        			
-	        		}
-	        		else {
-	        			logger.debug("m_usuario == null");
-	        			logger.debug("m_conn: " + m_conn);
-						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-						logger.debug("Usuario.getById ok");
-						if (m_usuario == null) {
-							throw new Exception("No existe el usuario con id " + id_usuario.toString());
-						}
-	        		}
-				} catch (Exception e) {
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
 				}
@@ -956,7 +1036,7 @@ public class AttendantThread extends Thread {
 					// no hay mensaje pendiente
 					encontrado = "N";
 				}
-
+				/*
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_POLEA_MENSAJE\"," +
@@ -966,15 +1046,12 @@ public class AttendantThread extends Thread {
     				"\"encontrado\":\"" + encontrado + "\"," +
     				"\"mensaje\":\"" + StringEscapeUtils.escapeJava(mensaje) + "\"" +
     				"}";
+    			*/
+				jo_output.put("encontrado", encontrado);
+				jo_output.put("mensaje", StringEscapeUtils.escapeJava(mensaje));
 				
         	}
-        	else if (tipo.equals("MSG_LOGIN")) {
-        		
-        	}
-        	else if (tipo.equals("MSG_LOGOUT")) {
-        		m_usuario = null;
-        	}
-        	else if (tipo.equals("MSG_PANICO_ALARMA")) {
+        	else if (str_tipo.equals("MSG_PANICO_ALARMA")) {
         		Integer id_usuario;
         		//String str_output;
         		Double latitud, longitud;
@@ -984,35 +1061,39 @@ public class AttendantThread extends Thread {
         		ChatUsuario chu;
         		LatLonPoint origen, norte, sur, este, oeste;
         		ArrayList<Usuario> lu;
-        		String str_guardianes, str_mensaje_a_encolar;
+        		//String str_guardianes, str_mensaje_a_encolar;
+        		String str_tipo_amigo;
         		MensajeUsuario mu;
+        		JSONArray ja_guardianes;
+        		JSONObject jo_l_data = new JSONObject();
         		
-            	str_output = "";
+            	//str_output = "";
         		
         		try {
-					id_usuario = Integer.decode(data.get("id_usuario").toString());
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
 					logger.debug("id_usuario: " + id_usuario);
 					
-	        		if (m_usuario != null) {
-	        			if (m_usuario.get_id() != id_usuario) {
-	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
-	        			}
-	        			
-	        		}
-	        		else {
-						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-						
-						if (m_usuario == null) {
-							throw new Exception("No existe el usuario con id " + id_usuario.toString());
-						}
-	        		}
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
+        		
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
 				
         		try {
-					latitud = Double.valueOf(data.get("latitud").toString());
+					latitud = Double.valueOf(jo_data.get("latitud").toString());
 					logger.debug("latitud: " + latitud);
 					
 				} catch (Exception e) {
@@ -1021,7 +1102,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					longitud = Double.valueOf(data.get("longitud").toString());
+					longitud = Double.valueOf(jo_data.get("longitud").toString());
 					logger.debug("longitud: " + longitud);
 					
 				} catch (Exception e) {
@@ -1030,7 +1111,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					tipo_incidente = Short.decode(data.get("tipo_incidente").toString());
+					tipo_incidente = Short.decode(jo_data.get("tipo_incidente").toString());
 					logger.debug("tipo_incidente: " + tipo_incidente);
 					
 				} catch (Exception e) {
@@ -1039,7 +1120,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					tipo_alarma = Short.decode(data.get("tipo_alarma").toString());
+					tipo_alarma = Short.decode(jo_data.get("tipo_alarma").toString());
 					logger.debug("tipo_alarma: " + tipo_alarma);
 					
 				} catch (Exception e) {
@@ -1114,7 +1195,7 @@ public class AttendantThread extends Thread {
 				listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_distinto", m_usuario.get_id().toString()));
 				
 				lu = Usuario.seek(m_conn, listParameters, null, null, 0, 10000);
-				
+				/*
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_PANICO_ALARMA\"," +
@@ -1124,15 +1205,21 @@ public class AttendantThread extends Thread {
     				"\"data\":{" +
     				"    \"id_incidente\":\"" + i.get_id().toString() + "\"," +
     				"    \"listado_guardianes\": [";
-
-				str_guardianes = "";
+				*/
+				//str_guardianes = "";
+				
+				jo_l_data.put("id_incidente", i.get_id().toString());
+				
+				ja_guardianes = new JSONArray();
 				
 				for (Usuario us : lu) {
 					
+					JSONObject jo_guardian = new JSONObject();
+					/*
 					if (!str_guardianes.equals("")) {
 						str_guardianes += ",";
 					}
-					
+					*/
 					//logger.debug("Usuario en cercania incidente: " + us);
 					
 					// es contacto? pertenece a la comunidad del usuario originador?
@@ -1140,15 +1227,23 @@ public class AttendantThread extends Thread {
 					
 					listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_usuario", id_usuario.toString()));
 					listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_usuario_contacto", us.get_id().toString()));
-					
+					/*
 					str_guardianes +=
 						"{ \"id_usuario\":\"" + us.get_id().toString() + "\" , \"alias\":\"" + us.get_alias() + "\", \"latitud\":\"" + us.get_latitud().toString() + "\", \"longitud\":\"" + us.get_longitud().toString() + "\", \"tipo_amigo\":\"";
+					*/
+					jo_guardian.put("id_usuario", us.get_id().toString());
+					jo_guardian.put("alias", us.get_alias());
+					jo_guardian.put("latitud", us.get_latitud().toString());
+					jo_guardian.put("longitud", us.get_longitud().toString());
+					
+					str_tipo_amigo = "";
 					
 					if (Contacto.seek(m_conn, listParameters, null, null, 0, 10000).size() > 0) {
 						// es contacto
 						logger.debug("Contacto");
 						
-						str_guardianes += "CONTACTO_DIRECTO";
+						//str_guardianes += "CONTACTO_DIRECTO";
+						str_tipo_amigo = "CONTACTO_DIRECTO";
 					}
 					else {
 						listParameters.clear();
@@ -1160,15 +1255,19 @@ public class AttendantThread extends Thread {
 							// es de la comunidad del usuario que genera alarma
 							logger.debug("Comunidad");
 							
-							str_guardianes += "CONTACTO_COMUNIDAD";
+							//str_guardianes += "CONTACTO_COMUNIDAD";
+							str_tipo_amigo = "CONTACTO_COMUNIDAD";
 						}
 						else {
 							// es de la comunidad temporal
 							logger.debug("Temporal");
 							
-							str_guardianes += "CONTACTO_TEMPORAL";
+							//str_guardianes += "CONTACTO_TEMPORAL";
+							str_tipo_amigo = "CONTACTO_TEMPORAL";
 						}
 					}
+					
+					jo_guardian.put("tipo_amigo", str_tipo_amigo);
 					
 					// inserto en chat_usuario
 					chu = new ChatUsuario();
@@ -1178,14 +1277,21 @@ public class AttendantThread extends Thread {
 					chu.set_fecha_ingreso("DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
 					chu.set_latitud_inicial(us.get_latitud());
 					chu.set_longitud_inicial(us.get_longitud());
-						
+					/*	
 					str_guardianes +=
 						"\" }";
+					*/
 					
+					ja_guardianes.put(jo_guardian);
 				}
+				
+				jo_l_data.put("listado_guardianes", ja_guardianes);
 				
 				for (Usuario us : lu) {
 					// debo notificar al usuario del evento; escribo registro en tabla mensaje_usuario
+					JSONObject jo_mensaje_a_encolar = new JSONObject();
+					JSONObject jo_ll_data = new JSONObject();
+					/*
 					str_mensaje_a_encolar =
 	    				"{" +
 	    				"\"tipo\": \"NOT_ALARMA_GUARDIAN\"," +
@@ -1202,11 +1308,25 @@ public class AttendantThread extends Thread {
 	    				"    ]" +
 	    				"    }" +
 	    				"}";        		
-						
+					*/
+					
+					jo_mensaje_a_encolar.put("tipo", "NOT_ALARMA_GUARDIAN");
+					
+					jo_ll_data.put("id_incidente", i.get_id().toString());
+					jo_ll_data.put("tipo_incidente", i.get_tipo().toString());
+					jo_ll_data.put("id_usuario_incidente", m_usuario.get_id().toString());
+					jo_ll_data.put("fecha_incidente", i.get_fecha());
+					jo_ll_data.put("latitud_incidente", i.get_latitud().toString());
+					jo_ll_data.put("longitud_incidente", i.get_longitud().toString());
+					jo_ll_data.put("alias", m_usuario.get_alias());
+					jo_ll_data.put("listado_guardianes", ja_guardianes);
+					
+					jo_mensaje_a_encolar.put("data", jo_ll_data);
+					
 					mu = new MensajeUsuario();
 					
 					mu.set_id_usuario(us.get_id());
-					mu.set_mensaje(str_mensaje_a_encolar);
+					mu.set_mensaje(jo_mensaje_a_encolar.toString());
 					mu.set_fecha("DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
 					mu.set_leido(false);
 					
@@ -1222,17 +1342,20 @@ public class AttendantThread extends Thread {
 				chu.set_latitud_inicial(m_usuario.get_latitud());
 				chu.set_longitud_inicial(m_usuario.get_longitud());
 				
-				
+				/*
   				str_output += 
   					str_guardianes +
     				"    ]" +
     				"    }" +
     				"}";
-  				
+  				*/
+				
+				jo_output.put("data", jo_l_data);
+				
   				//m_fifo_output.add(new String(str_output));
 				
         	}
-        	else if (tipo.equals("MSG_CREA_COMUNIDAD")) {
+        	else if (str_tipo.equals("MSG_CREA_COMUNIDAD")) {
         		
         		ComunidadUsuario cu;
         		Integer id_usuario;
@@ -1240,31 +1363,33 @@ public class AttendantThread extends Thread {
         		String nombre, descripcion;
         		Double latitud, longitud;
         		Long cobertura;
+        		JSONObject jo_l_data = new JSONObject();
         		
         		try {
-					id_usuario = Integer.decode(data.get("id_usuario").toString());
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
 					logger.debug("id_usuario: " + id_usuario);
 					
-	        		if (m_usuario != null) {
-	        			if (m_usuario.get_id() != id_usuario) {
-	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
-	        			}
-	        			
-	        		}
-	        		else {
-						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-						
-						if (m_usuario == null) {
-							throw new Exception("No existe el usuario con id " + id_usuario.toString());
-						}
-	        		}
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
+        		
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
 
 				try {
-					nombre = data.get("nombre").toString();
+					nombre = jo_data.get("nombre").toString();
 					logger.debug("nombre: " + nombre);
 					
 				} catch (Exception e) {
@@ -1273,7 +1398,7 @@ public class AttendantThread extends Thread {
 				}
         		
         		try {
-					descripcion = data.get("descripcion").toString();
+					descripcion = jo_data.get("descripcion").toString();
 					logger.debug("descripcion: " + descripcion);
 										
 				} catch (Exception e) {
@@ -1282,7 +1407,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					latitud = Double.valueOf(data.get("latitud").toString());
+					latitud = Double.valueOf(jo_data.get("latitud").toString());
 					logger.debug("latitud: " + latitud);
 										
 				} catch (Exception e) {
@@ -1291,7 +1416,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-        			longitud = Double.valueOf(data.get("longitud").toString());
+        			longitud = Double.valueOf(jo_data.get("longitud").toString());
 					logger.debug("longitud: " + longitud);
 					
 				} catch (Exception e) {
@@ -1300,7 +1425,7 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					cobertura = Long.decode(data.get("cobertura").toString());
+					cobertura = Long.decode(jo_data.get("cobertura").toString());
 					logger.debug("cobertura: " + cobertura);
 					
 				} catch (Exception e) {
@@ -1334,7 +1459,7 @@ public class AttendantThread extends Thread {
 				cu.set_fecha_ingreso("DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
 				
 				cu.insert(m_conn);
-				
+				/*
 				str_output =
         				"{" +
         				"\"tipo\": \"MSG_CREA_COMUNIDAD\"," +
@@ -1344,9 +1469,13 @@ public class AttendantThread extends Thread {
         				"\"data\":{" +
         				"    \"id_comunidad\":\"" + cm.get_id().toString() + "\"" +
         				"}" +
-        				"}";        		
+        				"}";
+        		*/
+				jo_l_data.put("id_comunidad", cm.get_id().toString());
+				
+				jo_output.put("data", jo_l_data);
         	}
-        	else if (tipo.equals("MSG_AGREGA_A_COMUNIDAD")) {
+        	else if (str_tipo.equals("MSG_AGREGA_A_COMUNIDAD")) {
         		
         		Integer id_usuario, id_usuario_a_agregar, id_comunidad;
         		Comunidad cm;
@@ -1354,32 +1483,30 @@ public class AttendantThread extends Thread {
         		ArrayList<ComunidadUsuario> lcu;
         		
         		try {
-					id_usuario = Integer.decode(data.get("id_usuario").toString());
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
 					logger.debug("id_usuario: " + id_usuario);
 					
-	        		if (m_usuario != null) {
-	        			if (m_usuario.get_id() != id_usuario) {
-	        				throw new Exception("No es posible cambio de usuario en una misma sesion");
-	        			}
-	        			
-	        		}
-	        		else {
-						m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-						
-						if (m_usuario == null) {
-							throw new Exception("No existe el usuario con id " + id_usuario.toString());
-						}
-	        		}
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					throw new Exception(e.getMessage());
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
 				}
         		
         		try {
-        			id_usuario_a_agregar = Integer.decode(data.get("id_usuario_a_agregar").toString());
+        			id_usuario_a_agregar = Integer.decode(jo_data.get("id_usuario_a_agregar").toString());
 					logger.debug("id_usuario_a_agregar: " + id_usuario_a_agregar);
 					
 				} catch (JSONException e) {
@@ -1391,7 +1518,7 @@ public class AttendantThread extends Thread {
 				}
 
 				try {
-        			id_comunidad = Integer.decode(data.get("id_comunidad").toString());
+        			id_comunidad = Integer.decode(jo_data.get("id_comunidad").toString());
 					logger.debug("id_comunidad: " + id_comunidad);
 					
 				} catch (Exception e) {
@@ -1450,42 +1577,402 @@ public class AttendantThread extends Thread {
 				cu.set_fecha_ingreso("DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
 				
 				cu.insert(m_conn);
-        		
+        		/*
 				str_output =
     				"{" +
     				"\"tipo\": \"MSG_AGREGA_A_COMUNIDAD\"," +
     				"\"token\":\"" + String.valueOf(token) + "\"," + 
     				"\"resultado\":\"0\"," +
     				"\"descripcion\":\"Exito\"," + 
-    				"}";        		
+    				"}";
+    		    */
         	}
-        	else if (tipo.equals("MSG_INICIO_CHAT")) {
+        	else if (str_tipo.equals("MSG_VALIDACION")) {
+        		/*
+        		 * el usuario ingresa en la aplicacion movil la clave de validacion enviada a su correo, la que quedo en 
+        		 * la columna clave_validacion de la tabla 'usuario'
+        		 */
+        		Integer id_usuario;
+        		String str_numero_validacion;
         		
+        		try {
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
+					logger.debug("id_usuario: " + id_usuario);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+        		
+				try {
+					str_numero_validacion = jo_data.get("numero_validacion").toString();
+					logger.debug("numero_validacion: " + str_numero_validacion);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_comunidad no presente" + ": " + e.getMessage());
+				}
+				
+				if (!str_numero_validacion.equals(m_usuario.get_clave_validacion())) {
+					throw new Exception("La clave de validacion no es correcta");
+				}
+				
+				// todo ok
+				// marco al usuario como vaído
+				
+				m_usuario.set_validado(true);
+				
+				m_usuario.update(m_conn);
+        		/*
+				str_output =
+    				"{" +
+    				"\"tipo\": \"MSG_AGREGA_A_COMUNIDAD\"," +
+    				"\"token\":\"" + String.valueOf(token) + "\"," + 
+    				"\"resultado\":\"0\"," +
+    				"\"descripcion\":\"Exito\"," + 
+    				"}";
+    		    */
         	}
-        	else if (tipo.equals("MSG_ENVIO_ARCHIVO")) {
+        	else if (str_tipo.equals("MSG_INVITAR")) {
+        		/*
+        		 * el usuario de la aplicación movil invita a uno o mas usuarios a unirse a su red; si pertenecen a la comunidad
+        		 * les genera mensaje a ser poleado
+        		 */
+        		Integer id_usuario;
+        		JSONArray ja_invitados, ja_invitados_resp;
+        		Contacto con;
         		
+        		ja_invitados_resp = new JSONArray();
+        		
+        		try {
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
+					logger.debug("id_usuario: " + id_usuario);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+
+        		try {
+					
+        			ja_invitados = (JSONArray) jo_data.get("invitados");
+					
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+        		
+        		for (int i = 0, size = ja_invitados.length(); i < size; i++) {
+        			
+        			ArrayList<Contacto> listaContactos;
+        			JSONObject jo_invitado_resp;
+        			String str_ya_inscrito = "false";
+        			
+        			JSONObject jo_invitado = ja_invitados.getJSONObject(i);
+        	      
+        			String i_correo = jo_invitado.getString("correo");
+        			String i_relacion = jo_invitado.getString("relacion");
+        	      
+        			Usuario i_usuario = Usuario.getByEmail(m_conn, i_correo);
+        			
+        			if (i_usuario != null) {
+        				// ya inscrito
+        				str_ya_inscrito = "true";
+ 
+            			// existe ya el contacto?
+            			
+        				listParameters.clear();
+        				
+        				listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_usuario", m_usuario.get_id().toString()));
+        				listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_usuario_contacto", i_usuario.get_id().toString()));
+        				
+        				listaContactos = Contacto.seek(m_conn, listParameters, null, null, 0, 10);
+        				
+        				if (listaContactos.size() > 0) {
+        					// ok, existe, actualizo relacion
+        					con = listaContactos.get(0);
+        					
+        					con.set_relacion(i_relacion);
+        					
+        					con.update(m_conn);
+        					
+        				}
+        				else {
+        					// no existe contacto
+        					// genero un mensaje MSG_INVITACION para el invitado, el que se ira a la aplicacion movil via poleo
+        					JSONObject jo_mensaje_a_encolar;
+        					JSONObject jo_l_data;
+        					MensajeUsuario mu;
+
+        					jo_mensaje_a_encolar = new JSONObject();
+        					jo_l_data = new JSONObject();
+        					
+        					jo_mensaje_a_encolar.put("tipo", "MSG_INVITACION");
+        					
+        					jo_l_data.put("id_usuario", i_usuario.get_id().toString());
+        					jo_l_data.put("tipo_evento", "SOLICITA_AMISTAD");
+        					jo_l_data.put("id_usuario_solicitante", m_usuario.get_id().toString());
+        					jo_l_data.put("nombre", m_usuario.get_nombre());
+        					jo_l_data.put("apellido_paterno", m_usuario.get_apellido_paterno());
+        					jo_l_data.put("apellido_materno", m_usuario.get_apellido_materno());
+        					jo_l_data.put("relacion", i_relacion);
+        					
+        					jo_mensaje_a_encolar.put("data", jo_l_data);
+        					
+        					mu = new MensajeUsuario();
+        					
+        					mu.set_id_usuario(i_usuario.get_id());
+        					mu.set_mensaje(jo_mensaje_a_encolar.toString());
+        					mu.set_fecha("DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
+        					mu.set_leido(false);
+        					
+        					mu.insert(m_conn);
+        				}
+        			}
+        			else {
+        				// no inscrito
+        				
+        				// existe ya el contacto?
+        				
+    					// busco por id_usuario, correo
+	    				listParameters.clear();
+	    				
+	    				listParameters.add(new AbstractMap.SimpleEntry<String, String>("id_usuario", m_usuario.get_id().toString()));
+	    				listParameters.add(new AbstractMap.SimpleEntry<String, String>("correo", i_correo));
+	    				
+	    				listaContactos = Contacto.seek(m_conn, listParameters, null, null, 0, 10);
+	    				
+	    				if (listaContactos.size() > 0) {
+	    					// ok, existe, actualizo relacion
+	    					con = listaContactos.get(0);
+	    					
+	    					con.set_relacion(i_relacion);
+	    					
+	    					con.update(m_conn);
+	    					
+	    				}
+	    				else {
+	    					// dejo una solicitud pendiente
+	    				}
+        			}
+        			        			
+        			jo_invitado_resp = new JSONObject();
+        			
+        			jo_invitado_resp.put("correo", i_correo);
+        			
+    				jo_invitado_resp.put("ya_inscrito", str_ya_inscrito);
+    				
+    				ja_invitados_resp.put(jo_invitado_resp);
+   				}
+        			
+        		jo_output.put("invitados", ja_invitados_resp);
         	}
-        	else if (tipo.equals("MSG_CREA_TEMA")) {
+        	else if (str_tipo.equals("MSG_RESP_INVITACION")) {
+        		/*
+        		 * el invitado notifica al servidor de su deseo de aceptar o rechazar la invitacion
+        		 */
         		
+        		Integer id_usuario, id_usuario_solicitante;
+        		String str_respuesta, str_relacion;
+        		Usuario u_solicitante;
+				JSONObject jo_mensaje_a_encolar;
+				JSONObject jo_l_data;
+				MensajeUsuario mu;
+        		
+        		try {
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
+					logger.debug("id_usuario: " + id_usuario);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		try {
+        			id_usuario_solicitante = Integer.decode(jo_data.get("id_usuario_solicitante").toString());
+					logger.debug("id_usuario_solicitante: " + id_usuario_solicitante);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario_solicitante no presente" + ": " + e.getMessage());
+				}
+        		
+        		try {
+        			str_respuesta = jo_data.get("respuesta").toString();
+					logger.debug("respuesta: " + str_respuesta);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo respuesta no presente" + ": " + e.getMessage());
+				}
+
+        		try {
+        			str_relacion = jo_data.get("relacion").toString();
+					logger.debug("relacion: " + str_relacion);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo relacion no presente" + ": " + e.getMessage());
+				}
+
+				try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+
+				try {
+					
+					u_solicitante = Usuario.getById(m_conn, id_usuario_solicitante.toString());
+					logger.debug("UsuarioSolicitante.getById ok");
+					if (u_solicitante == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario_solicitante.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+        		
+        		// genero mensaje de notificacion a usuario solicitante, que debera ser leido via poleo
+				jo_mensaje_a_encolar = new JSONObject();
+				jo_l_data = new JSONObject();
+				
+				jo_mensaje_a_encolar.put("tipo", "MSG_RESP_INVITAR");
+				
+				jo_l_data.put("id_usuario", m_usuario.get_id().toString());
+				jo_l_data.put("id_usuario_solicitante", u_solicitante.get_id().toString());
+				jo_l_data.put("respuesta", str_respuesta);
+				
+				jo_mensaje_a_encolar.put("data", jo_l_data);
+				
+				mu = new MensajeUsuario();
+				
+				mu.set_id_usuario(u_solicitante.get_id());
+				mu.set_mensaje(jo_mensaje_a_encolar.toString());
+				mu.set_fecha("DATE_FORMAT(now(), '%d-%m-%Y %H:%i:%s')");
+				mu.set_leido(false);
+				
+				mu.insert(m_conn);
+        		
+        		if (str_respuesta.equals("si")) {
+        			// genero registro en tabla 'contacto'
+        			Contacto con = new Contacto();
+        			
+        			con.set_id_usuario(u_solicitante.get_id());
+        			con.set_id_usuario_contacto(m_usuario.get_id());
+        			con.set_correo(m_usuario.get_correo());
+        			con.set_relacion(str_relacion);
+        			
+        			con.insert(m_conn);
+        		}
+        		else {
+        			
+        		}
         	}
-        	else if (tipo.equals("MSG_ARCHIVO_TEMA")) {
+        	else if (str_tipo.equals("MSG_OBTIENE_DATOS_USUARIO")) {
         		
+        		Integer id_usuario;
+        		JSONObject jo_l_data = new JSONObject();
+        		JSONArray ja_contactos = new JSONArray();
+        		
+        		try {
+        			id_usuario = Integer.decode(jo_data.get("id_usuario").toString());
+					logger.debug("id_usuario: " + id_usuario);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
+				}
+        		
+        		try {
+					
+        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+					logger.debug("Usuario.getById ok");
+					if (m_usuario == null) {
+						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+					}
+
+        		} catch (Exception e) {
+					// TODO Auto-generated catch block
+					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+				}
+        		
+        		jo_l_data.put("id_usuario", m_usuario.get_id().toString());
+        		jo_l_data.put("nombre", m_usuario.get_nombre());
+        		jo_l_data.put("apellido_paterno", m_usuario.get_apellido_paterno());
+        		jo_l_data.put("apellido_materno", m_usuario.get_apellido_materno());
+        		jo_l_data.put("movil", m_usuario.get_movil());
+        		jo_l_data.put("email", m_usuario.get_correo());
+        		jo_l_data.put("email_opcional", m_usuario.get_correo_opcional());
+        		jo_l_data.put("fecha_nacimiento", m_usuario.get_fecha_nacimiento());
+        		jo_l_data.put("hombre", m_usuario.get_hombre());
+        		jo_l_data.put("contactar_contactos_de_contacto", m_usuario.get_contactar_contactos_de_contactos());
+        		jo_l_data.put("publicar_informacion", m_usuario.get_publicar_informacion());
+        		jo_l_data.put("antecedentes_emergencia", m_usuario.get_antecedentes_emergencia());
+        		
+        		jo_l_data.put("contactos", ja_contactos);
+        		
+        		jo_output.put("data", jo_l_data);
         	}
         	else {
-        		logger.debug("Tipo de mensaje desconocido: " + tipo);
+        		logger.debug("Tipo de mensaje desconocido: " + str_tipo);
+        		
+        		throw new Exception("Tipo de mensaje desconocido: " + str_tipo);
         	}
         	
         }
         catch (JSONException ex) {
             logger.debug("JSONException: " + ex.toString());
 			ex.printStackTrace();
+			/*
 			str_output =
 				"{" +
 				"\"tipo\": \"" + tipo + "\"," +
 				"\"token\":\"" + String.valueOf(token) + "\"," + 
 				"\"resultado\":\"1\"," +
 				"\"descripcion\":\"Fallo tipo JSONException, " + ex.getMessage() + "\"," + 
-				"}";        		
+				"}";
+			*/
+			str_resultado = "1"; 
+			
+			str_descripcion = "Fallo tipo JSONException, " + ex.getMessage();
             
         }
         catch (SQLException ex) {
@@ -1493,30 +1980,41 @@ public class AttendantThread extends Thread {
 			logger.debug("SQLState: " + ex.getSQLState());
 			logger.debug("VendorError: " + ex.getErrorCode());
 			ex.printStackTrace();
+			/*
 			str_output =
 				"{" +
 				"\"tipo\": \"" + tipo + "\"," +
 				"\"token\":\"" + String.valueOf(token) + "\"," + 
 				"\"resultado\":\"1\"," +
 				"\"descripcion\":\"Fallo tipo SQLException, " + ex.getMessage() + "\"," + 
-				"}";        		
+				"}";
+			*/        		
+			str_resultado = "1"; 
+			
+			str_descripcion = "Fallo tipo SQLException, " + ex.getMessage();
         }
         catch (Exception ex) {
 			logger.debug("Exception: " + ex.getMessage());
 			ex.printStackTrace();
+			/*
 			str_output =
 				"{" +
 				"\"tipo\": \"" + tipo + "\"," +
 				"\"token\":\"" + String.valueOf(token) + "\"," + 
 				"\"resultado\":\"1\"," +
 				"\"descripcion\":\"Fallo tipo Exception, " + ex.getMessage() + "\"," + 
-				"}";        		
+				"}";
+			*/       		
+			str_resultado = "1"; 
+			
+			str_descripcion = "Fallo tipo Exception, " + ex.getMessage();
         }
         
-    	if (!str_output.equals("")) {
-    		
-    		m_fifo_output.add(new String(str_output));  		
-    	}
+        jo_output.put("resultado", str_resultado);
+        
+        jo_output.put("descripcion", str_descripcion);
+        
+   		m_fifo_output.add(new String(jo_output.toString()));  		
 	}
 	/*
 	@Override
