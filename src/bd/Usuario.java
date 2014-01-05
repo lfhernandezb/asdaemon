@@ -611,6 +611,10 @@ public class Usuario
 		return getByParameter(p_conn, "correo", "'" + p_correo + "'");
 	}
 	
+	public static Usuario getByOptEmail(Connection p_conn, String p_correo_opcional) throws Exception {
+		return getByParameter(p_conn, "correo_opcional", "'" + p_correo_opcional + "'");
+	}
+
 	public static Usuario getByMovil(Connection p_conn, String p_movil) throws Exception {
 		return getByParameter(p_conn, "movil", "'" + p_movil + "'");
 	}

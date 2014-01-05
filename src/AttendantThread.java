@@ -123,7 +123,7 @@ public class AttendantThread extends Thread {
 		return null;
 	}
 	
-	public String bb_to_str(ByteBuffer buffer){
+	public String bb_to_str(ByteBuffer buffer) throws Exception{
 		  String data = "";
 		  try{
 		    //int old_position = buffer.position();
@@ -133,7 +133,8 @@ public class AttendantThread extends Thread {
 		    //buffer.position(old_position);  
 		  }catch (Exception e){
 		    e.printStackTrace();
-		    return "";
+		    //return "";
+		    throw new Exception(e.getMessage());
 		  }
 		  return data;
 	}
@@ -147,11 +148,12 @@ public class AttendantThread extends Thread {
 		// Attempt to read off the channel
 			
 			
-			// Clear out our read buffer so it's ready for new data
-			this.m_readBuffer.clear();
-			
-			//this.m_readBuffer.rewind();				
+		// Clear out our read buffer so it's ready for new data
+		this.m_readBuffer.clear();
+		
+		//this.m_readBuffer.rewind();			
 
+		try {
 			numRead = socketChannel.read(this.m_readBuffer);
 			
 			//logger.debug("numread: " + Integer.toString(numRead));
@@ -179,46 +181,50 @@ public class AttendantThread extends Thread {
 			logger.debug("m_str_input: " + m_str_input);
 			
 			// request o response?
+		
 			
-			try {
-				
-				m_jo = new JSONObject(m_str_input);
-				
-				// ok, mensaje completo
-				//logger.debug("mensaje completo");
-								
-				m_html_input = "";
+			m_jo = new JSONObject(m_str_input);
+			
+			// ok, mensaje completo
+			//logger.debug("mensaje completo");
+							
+			m_html_input = "";
 
+			try {
+				resultado = m_jo.get("resultado").toString();
+				
+				// response
+				
 				try {
-					resultado = m_jo.get("resultado").toString();
 					
-					// response
+					ProcessResponse();
 					
-					try {
-						
-						ProcessResponse();
-						
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						// ignore
-					}
 				} catch (Exception e) {
-					// no existe atributo 'resultado'.... request
-					try {
-						
-						ProcessRequest();
-						
-					} catch (Exception ex) {
-						// TODO Auto-generated catch block
-						// ignore
-					}
+					// TODO Auto-generated catch block
+					// ignore
 				}
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-				// aun no tengo un objeto JSON completo... concateno
-				logger.debug("mensaje incompleto");
+			} catch (JSONException e) {
+				// no existe atributo 'resultado'.... request
+				try {
+					
+					ProcessRequest();
+					
+				} catch (Exception ex) {
+					// TODO Auto-generated catch block
+					// ignore
+				}
 			}
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			// aun no tengo un objeto JSON completo... concateno
+			logger.debug("mensaje incompleto");
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			// aun no tengo un objeto JSON completo... concateno
+			logger.debug("mensaje incompleto");
+		}
 			
 	    
 	}
@@ -505,7 +511,7 @@ public class AttendantThread extends Thread {
 		long token;
 		ArrayList<Comuna> listaComuna;
 		ArrayList<AbstractMap.SimpleEntry<String, String>> listParameters;
-		
+				
 		str_tipo = "";
 		//str_output = "";
 		token = 0;
@@ -536,35 +542,61 @@ public class AttendantThread extends Thread {
         	
         	if (str_tipo.equals("MSG_REGISTRO")) {
         		
-        		m_usuario = new Usuario();
+        		String alias;
+        		String contrasena;
+        		String nombre;
+        		String apellido_paterno;
+        		String apellido_materno;
+        		String movil;
+        		String email;
+        		String email_opcional;
+        		String fecha_nacimiento;
+        		Boolean b_hombre;
+        		Boolean b_contactar_contactos_de_contactos;
+        		Boolean b_contactar_desconocidos;
+        		Boolean b_publicar_informacion;
+        		String antecedentes_emergencia;
         		
+        		if (m_usuario != null) {
+        			throw new Exception("No es posible registrar usuario en sesion con usuario identificado");
+        		}
+
         		try {
-					String alias = jo_data.get("alias").toString();
+					alias = jo_data.get("alias").toString();
 					logger.debug("alias: " + alias);
-					
-					m_usuario.set_alias(alias);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo alias no presente" + ": " + e.getMessage());
 				}
+				
+				logger.debug("alias_min_length: " + m_ini.get("General", "alias_min_length"));
+				
+				if (alias.length() < Integer.parseInt(m_ini.get("General", "alias_min_length"))) {
+					throw new Exception("Atributo alias debe tener por lo menos " + m_ini.get("General", "alias_min_length") + "caracteres");
+				}
         		
-        		try {
-					String contrasena = jo_data.get("contrasena").toString();
+				// ya existe usuario con el alias especificado?
+				if (Usuario.getByAlias(m_conn, alias) != null) {
+					throw new Exception("Ya existe usuario con el alias '" + alias + "'");
+				}
+
+				try {
+					contrasena = jo_data.get("contrasena").toString();
 					logger.debug("contrasena: " + contrasena);
-					
-					m_usuario.set_contrasena(contrasena);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo contrasena no presente" + ": " + e.getMessage());
 				}
+				
+				if (!Util.checkPasswordStrength(contrasena)) {
+					throw new Exception("Contrasena debil");
+				}
 
         		try {
-					String nombre = jo_data.get("nombre").toString();
+					nombre = jo_data.get("nombre").toString();
 					logger.debug("nombre: " + nombre);
-					
-					m_usuario.set_nombre(nombre);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -572,10 +604,8 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					String apellido_paterno = jo_data.get("apellido_paterno").toString();
+					apellido_paterno = jo_data.get("apellido_paterno").toString();
 					logger.debug("apellido_paterno: " + apellido_paterno);
-					
-					m_usuario.set_apellido_paterno(apellido_paterno);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -583,10 +613,8 @@ public class AttendantThread extends Thread {
 				}
 
         		try {
-					String apellido_materno = jo_data.get("apellido_materno").toString();
+					apellido_materno = jo_data.get("apellido_materno").toString();
 					logger.debug("apellido_materno: " + apellido_materno);
-					
-					m_usuario.set_apellido_materno(apellido_materno);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -594,12 +622,10 @@ public class AttendantThread extends Thread {
 				}
 				
         		try {
-					String movil = jo_data.get("movil").toString();
+					movil = jo_data.get("movil").toString();
 					logger.debug("movil: " + movil);
-					
-					m_usuario.set_movil(movil);
-					
-				} catch (Exception e) {
+				
+        		} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo movil no presente" + ": " + e.getMessage());
 				}
@@ -616,47 +642,70 @@ public class AttendantThread extends Thread {
 				}
 				*/
         		try {
-					String email = jo_data.get("email").toString();
+					email = jo_data.get("email").toString();
 					logger.debug("email: " + email);
-					
-					m_usuario.set_correo(email);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo email no presente" + ": " + e.getMessage());
 				}
+				
+				if (!Util.checkEmailForm(email)) {
+					throw new Exception("Correo no valido");
+				}				
 
-        		try {
-					String email_opcional = jo_data.get("email_opcional").toString();
+				// ya existe usuario con el email especificado?
+				if (Usuario.getByEmail(m_conn, email) != null) {
+					throw new Exception("Ya existe usuario con el correo '" + email + "'");
+				}
+
+				if (Usuario.getByOptEmail(m_conn, email) != null) {
+					throw new Exception("Ya existe usuario con el correo opcional '" + email + "'");
+				}
+				
+				email_opcional = "";
+
+				try {
+					email_opcional = jo_data.get("email_opcional").toString();
 					logger.debug("email_opcional: " + email_opcional);
-					
-					m_usuario.set_correo_opcional(email_opcional);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					logger.debug("Atributo email_opcional no presente" + ": " + e.getMessage());
 				}
+				
+				if (email_opcional.length() > 0) {
+					if (!Util.checkEmailForm(email_opcional)) {
+						throw new Exception("Correo opcional no valido");
+					}									
+				}
+
+				// ya existe usuario con el email opcional especificado?
+				if (Usuario.getByEmail(m_conn, email_opcional) != null) {
+					throw new Exception("Ya existe usuario con el correo '" + email_opcional + "'");
+				}
+
+				if (Usuario.getByOptEmail(m_conn, email) != null) {
+					throw new Exception("Ya existe usuario con el correo opcional '" + email_opcional + "'");
+				}
 
 				try {
-					String fecha_nacimiento = jo_data.get("fecha_nacimiento").toString();
+					fecha_nacimiento = jo_data.get("fecha_nacimiento").toString();
 					logger.debug("fecha_nacimiento: " + fecha_nacimiento);
 					
-					m_usuario.set_fecha_nacimiento(fecha_nacimiento);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo fecha_nacimiento no presente. " .concat(e.getMessage()));
 				}
 
 				try {
-					Boolean b = false;
+					b_hombre = false;
 					String hombre = jo_data.get("hombre").toString();
 					logger.debug("hombre: " + hombre);
 					
 					if (hombre.equals("true")) {
-						b = true;
+						b_hombre = true;
 					}
-					
-					m_usuario.set_hombre(b);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -664,15 +713,13 @@ public class AttendantThread extends Thread {
 				}
 
 				try {
-					Boolean b = false;
+					b_contactar_contactos_de_contactos = false;
 					String contactar_contactos_de_contactos = jo_data.get("contactar_contactos_de_contactos").toString();
 					logger.debug("contactar_contactos_de_contactos: " + contactar_contactos_de_contactos);
 					
 					if (contactar_contactos_de_contactos.equals("true")) {
-						b = true;
+						b_contactar_contactos_de_contactos = true;
 					}
-					
-					m_usuario.set_contactar_contactos_de_contactos(b);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -680,15 +727,13 @@ public class AttendantThread extends Thread {
 				}
 
 				try {
-					Boolean b = false;
+					b_contactar_desconocidos = false;
 					String contactar_desconocidos = jo_data.get("contactar_desconocidos").toString();
 					logger.debug("contactar_desconocidos: " + contactar_desconocidos);
 					
 					if (contactar_desconocidos.equals("true")) {
-						b = true;
+						b_contactar_desconocidos = true;
 					}
-					
-					m_usuario.set_contactar_desconocidos(b);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -696,15 +741,13 @@ public class AttendantThread extends Thread {
 				}
 
 				try {
-					Boolean b = false;
+					b_publicar_informacion = false;
 					String publicar_informacion = jo_data.get("publicar_informacion").toString();
 					logger.debug("publicar_informacion: " + publicar_informacion);
 					
 					if (publicar_informacion.equals("true")) {
-						b = true;
+						b_publicar_informacion = true;
 					}
-					
-					m_usuario.set_publicar_informacion(b);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -735,10 +778,8 @@ public class AttendantThread extends Thread {
 				}
 				*/
         		try {
-					String antecedentes_emergencia = jo_data.get("antecedentes_emergencia").toString();
+					antecedentes_emergencia = jo_data.get("antecedentes_emergencia").toString();
 					logger.debug("antecedentes_emergencia: " + antecedentes_emergencia);
-					
-					m_usuario.set_antecedentes_emergencia(antecedentes_emergencia);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -803,20 +844,25 @@ public class AttendantThread extends Thread {
 				
 				u.set_id_comuna(listaComuna.get(0).get_id());
 				*/
-				// ya existe usuario con el alias especificado?
-				if (Usuario.getByAlias(m_conn, m_usuario.get_alias()) != null) {
-					throw new Exception("Ya existe usuario con el alias '" + m_usuario.get_alias() + "'");
-				}
 				
-				// ya existe usuario con el email especificado?
-				if (Usuario.getByEmail(m_conn, m_usuario.get_correo()) != null) {
-					throw new Exception("Ya existe usuario con el email '" + m_usuario.get_correo() + "'");
-				}
-
-				// ya existe usuario con el movil especificado?
-				if (Usuario.getByMovil(m_conn, m_usuario.get_movil()) != null) {
-					throw new Exception("Ya existe usuario con el movil '" + m_usuario.get_movil() + "'");
-				}
+				// todo ok
+				
+        		m_usuario = new Usuario();
+        		
+        		m_usuario.set_alias(alias);
+				m_usuario.set_contrasena(contrasena);
+        		m_usuario.set_nombre(nombre);
+        		m_usuario.set_apellido_paterno(apellido_paterno);
+        		m_usuario.set_apellido_materno(apellido_materno);
+        		m_usuario.set_movil(movil);
+        		m_usuario.set_correo(email);
+        		m_usuario.set_correo_opcional(email_opcional);
+        		m_usuario.set_fecha_nacimiento(fecha_nacimiento);
+        		m_usuario.set_hombre(b_hombre);
+        		m_usuario.set_contactar_contactos_de_contactos(b_contactar_contactos_de_contactos);
+        		m_usuario.set_contactar_desconocidos(b_contactar_desconocidos);
+        		m_usuario.set_publicar_informacion(b_publicar_informacion);
+        		m_usuario.set_antecedentes_emergencia(antecedentes_emergencia);
 				
 				// creo la clave para validacion
 				m_usuario.set_clave_validacion(Util.generateRandomWord(6));
@@ -852,19 +898,26 @@ public class AttendantThread extends Thread {
 					// TODO Auto-generated catch block
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
-        		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
 
 				try {
@@ -925,18 +978,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
         		
         		try {
@@ -1001,20 +1061,26 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
-
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
 				}
-        						
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
+
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
+				}
 
 				// hay algun evento asincrono que notificar al cliente?
             	ArrayList<MensajeUsuario> lmu;
@@ -1089,18 +1155,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
 				
         		try {
@@ -1385,18 +1458,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
 
 				try {
@@ -1502,18 +1582,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
         		
         		try {
@@ -1615,18 +1702,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
         		
 				try {
@@ -1678,18 +1772,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
 
         		try {
@@ -1855,17 +1956,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo relacion no presente" + ": " + e.getMessage());
 				}
 
-				try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
 
 				try {
@@ -1932,17 +2041,25 @@ public class AttendantThread extends Thread {
 					throw new Exception("Atributo id_usuario no presente" + ": " + e.getMessage());
 				}
         		
-        		try {
-					
-        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
-					logger.debug("Usuario.getById ok");
-					if (m_usuario == null) {
-						throw new Exception("No existe el usuario con id " + id_usuario.toString());
+				if (m_usuario != null) {
+					if (m_usuario.get_id() != id_usuario) {
+						throw new Exception("Error, no es posible cambiar de usuario");
 					}
+				}
+				else {
+					
+	        		try {
+						
+	        			m_usuario = Usuario.getById(m_conn, id_usuario.toString());
+						
+						if (m_usuario == null) {
+							throw new Exception("No existe el usuario con id " + id_usuario.toString());
+						}
 
-        		} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+	        		} catch (Exception e) {
+						// TODO Auto-generated catch block
+						throw new Exception("Excepcion del tipo " + e.getClass() + " Info: " + e.getMessage());
+					}
 				}
         		
         		jo_l_data.put("id_usuario", m_usuario.get_id().toString());
